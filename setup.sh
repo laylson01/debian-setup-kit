@@ -37,6 +37,7 @@ else
   APT_CMD=(sudo apt-get)
 fi
 export DEBIAN_FRONTEND=noninteractive
+INSTALLED_THIS_RUN=()
 
 # ---------- Logging ----------
 log() {
@@ -372,6 +373,9 @@ install_packages() {
   fi
 
   "${APT_CMD[@]}" install -y --no-install-recommends "${missing[@]}"
+  INSTALLED_THIS_RUN+=("${missing[@]}")
+  echo "Pacotes instalados em '$module_name':"
+  printf ' - %s\n' "${missing[@]}"
   success "Módulo '$module_name' concluído."
 }
 
@@ -417,6 +421,31 @@ print_summary() {
   echo "  Dry-run:    $DRY_RUN"
   echo "  Auto-fix:   $AUTO_FIX_APT_MODE"
   echo
+}
+
+print_installed_summary() {
+  if [ "${#INSTALLED_THIS_RUN[@]}" -eq 0 ]; then
+    warn "Nenhum novo pacote foi instalado nesta execução."
+    return
+  fi
+
+  echo
+  echo "Pacotes instalados nesta execução (${#INSTALLED_THIS_RUN[@]}):"
+  printf ' - %s\n' "${INSTALLED_THIS_RUN[@]}"
+}
+
+suggest_autoremove_if_needed() {
+  local removable=()
+  while IFS= read -r pkg; do
+    removable+=("$pkg")
+  done < <("${APT_CMD[@]}" -s autoremove 2>/dev/null | sed -n 's/^Remv[[:space:]]\+\([^[:space:]]\+\).*/\1/p')
+
+  if [ "${#removable[@]}" -gt 0 ]; then
+    echo
+    warn "Foram detectados ${#removable[@]} pacotes que podem ser removidos com segurança:"
+    printf ' - %s\n' "${removable[@]}"
+    warn "Sugestão: execute '${APT_CMD[*]} autoremove'"
+  fi
 }
 
 # ---------- Pacotes por módulo ----------
@@ -634,6 +663,8 @@ $INSTALL_OPTIONAL && install_packages "optional" "${OPTIONAL_PACKAGES[@]}"
 if [ "$DRY_RUN" = false ]; then
   create_directories
   enable_ssh_if_installed
+  print_installed_summary
+  suggest_autoremove_if_needed
 else
   warn "Dry-run ativo: diretórios e serviços não serão alterados."
 fi
