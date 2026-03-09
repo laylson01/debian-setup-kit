@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ensure_any_module_selected() {
-  if ! $INSTALL_BASE && ! $INSTALL_TERMINAL && ! $INSTALL_DEV && ! $INSTALL_NETWORK && ! $INSTALL_AUTOMATION && ! $INSTALL_EMBEDDED && ! $INSTALL_OPTIONAL && [ "$PROFILE" = "none" ]; then
+  if ! $INSTALL_BASE && ! $INSTALL_TERMINAL && ! $INSTALL_DEV && ! $INSTALL_NETWORK && ! $INSTALL_AUTOMATION && ! $INSTALL_EMBEDDED && ! $INSTALL_OPTIONAL && ! $INSTALL_DESKTOP_BASIC && [ "$PROFILE" = "none" ]; then
     warn "Nenhum módulo selecionado."
     echo
     show_help
@@ -25,12 +25,13 @@ reset_module_selection() {
   INSTALL_AUTOMATION=false
   INSTALL_EMBEDDED=false
   INSTALL_OPTIONAL=false
+  INSTALL_DESKTOP_BASIC=false
 }
 
 interactive_select_modules() {
   log "Modo interativo: selecione os stacks desejados."
 
-  local base_state terminal_state dev_state network_state automation_state embedded_state optional_state
+  local base_state terminal_state dev_state network_state automation_state embedded_state optional_state desktop_state
   base_state="$(bool_to_onoff "$INSTALL_BASE")"
   terminal_state="$(bool_to_onoff "$INSTALL_TERMINAL")"
   dev_state="$(bool_to_onoff "$INSTALL_DEV")"
@@ -38,6 +39,7 @@ interactive_select_modules() {
   automation_state="$(bool_to_onoff "$INSTALL_AUTOMATION")"
   embedded_state="$(bool_to_onoff "$INSTALL_EMBEDDED")"
   optional_state="$(bool_to_onoff "$INSTALL_OPTIONAL")"
+  desktop_state="$(bool_to_onoff "$INSTALL_DESKTOP_BASIC")"
 
   reset_module_selection
 
@@ -54,6 +56,7 @@ interactive_select_modules() {
         "AUTOMATION" "Ferramentas de automação" "$automation_state" \
         "EMBEDDED" "Ferramentas para ESP32/embedded" "$embedded_state" \
         "OPTIONAL" "Pacotes opcionais" "$optional_state" \
+        "DESKTOPBASIC" "Apps básicos para usuário final" "$desktop_state" \
         3>&1 1>&2 2>&3
     )" || {
       error "Seleção interativa cancelada."
@@ -69,6 +72,7 @@ interactive_select_modules() {
         AUTOMATION) INSTALL_AUTOMATION=true ;;
         EMBEDDED) INSTALL_EMBEDDED=true ;;
         OPTIONAL) INSTALL_OPTIONAL=true ;;
+        DESKTOPBASIC) INSTALL_DESKTOP_BASIC=true ;;
       esac
     done
     return
@@ -88,6 +92,7 @@ interactive_select_modules() {
   echo "  5) Automation"
   echo "  6) Embedded"
   echo "  7) Optional"
+  echo "  8) Desktop Basic"
 
   local picks=()
   read -r -a picks
@@ -102,6 +107,7 @@ interactive_select_modules() {
       5) INSTALL_AUTOMATION=true ;;
       6) INSTALL_EMBEDDED=true ;;
       7) INSTALL_OPTIONAL=true ;;
+      8) INSTALL_DESKTOP_BASIC=true ;;
       *)
         warn "Opção ignorada no modo fallback: $pick"
         ;;

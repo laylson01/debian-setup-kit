@@ -45,6 +45,7 @@ Opções:
   --automation    Instala ferramentas de automação
   --embedded      Instala ferramentas para ESP32/embedded
   --optional      Instala pacotes opcionais
+  --desktop-basic Instala apps básicos para usuário final (browser, mídia, e-mail)
   --interactive              Seleciona stacks por teclado (auto)
   --interactive=tui          Força checklist com whiptail
   --interactive=cli          Força seleção por números no terminal
@@ -64,6 +65,7 @@ Exemplos:
   ./setup.sh --profile minimal-server
   ./setup.sh --rollback-sources
   ./setup.sh --base --dev --network
+  ./setup.sh --desktop-basic
   ./setup.sh --interactive
   ./setup.sh --interactive=cli
   ./setup.sh --terminal --automation --embedded
@@ -83,6 +85,7 @@ print_summary() {
   echo "  Automation: $INSTALL_AUTOMATION"
   echo "  Embedded:   $INSTALL_EMBEDDED"
   echo "  Optional:   $INSTALL_OPTIONAL"
+  echo "  Desktop:    $INSTALL_DESKTOP_BASIC"
   echo "  Profile:    $PROFILE"
   echo "  Update:     $DO_UPDATE"
   echo "  Upgrade:    $DO_UPGRADE"
@@ -133,6 +136,7 @@ print_welcome() {
   echo "  - automation"
   echo "  - embedded"
   echo "  - optional"
+  echo "  - desktop-basic"
   echo "============================================"
   echo
 }

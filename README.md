@@ -55,6 +55,12 @@ Listar perfis disponíveis:
 ./setup.sh --profile list
 ```
 
+Stack para usuário comum (desktop):
+
+```bash
+./setup.sh --desktop-basic
+```
+
 ## Correção de repositórios APT (quando necessário)
 
 Aplicar correção automática:
@@ -91,6 +97,7 @@ Restaurar último backup de sources:
 - `--automation`
 - `--embedded`
 - `--optional`
+- `--desktop-basic`
 
 Exemplo com stacks específicas:
 
@@ -198,6 +205,18 @@ Exemplo com stacks específicas:
 
 - `ufw`
 - `flatpak`
+
+### `--desktop-basic`
+
+- `chromium`
+- `vlc`
+- `ffmpeg`
+- `pavucontrol`
+- `thunderbird`
+- `libreoffice`
+- `evince`
+- `file-roller`
+- `gnome-screenshot`
 
 ### Perfil `minimal-server`
 

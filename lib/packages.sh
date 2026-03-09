@@ -100,6 +100,18 @@ OPTIONAL_PACKAGES=(
   flatpak
 )
 
+DESKTOP_BASIC_PACKAGES=(
+  chromium
+  vlc
+  ffmpeg
+  pavucontrol
+  thunderbird
+  libreoffice
+  evince
+  file-roller
+  gnome-screenshot
+)
+
 MINIMAL_SERVER_PACKAGES=(
   ca-certificates
   curl
