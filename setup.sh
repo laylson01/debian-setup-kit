@@ -187,12 +187,21 @@ print_welcome
 print_summary
 ensure_privileges
 confirm_execution
+ensure_gaming_prereqs
 
 log "Atualizando índices do APT..."
-if [ "$DO_UPDATE" = true ] && [ "$DRY_RUN" = false ]; then
-  "${APT_CMD[@]}" update
-  ensure_apt_release_consistency
-  ensure_apt_health
+if [ "$DO_UPDATE" = true ] || [ "$NEEDS_APT_UPDATE_AFTER_ARCH_ADD" = true ]; then
+  if [ "$DO_UPDATE" = false ] && [ "$NEEDS_APT_UPDATE_AFTER_ARCH_ADD" = true ]; then
+    warn "--skip-update foi ignorado porque a stack gaming habilitou i386 e precisa atualizar índices."
+  fi
+
+  if [ "$DRY_RUN" = true ]; then
+    warn "Dry-run ativo: apt update não será executado."
+  else
+    "${APT_CMD[@]}" update
+    ensure_apt_release_consistency
+    ensure_apt_health
+  fi
 elif [ "$DO_UPDATE" = false ]; then
   warn "apt update foi ignorado por opção (--skip-update)."
 else

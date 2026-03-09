@@ -27,7 +27,7 @@ install_packages() {
   local installable=()
   local unavailable=()
   for pkg in "${missing[@]}"; do
-    if package_available "$pkg"; then
+    if package_installable "$pkg"; then
       installable+=("$pkg")
     else
       unavailable+=("$pkg")
@@ -35,9 +35,9 @@ install_packages() {
   done
 
   if [ "${#installable[@]}" -eq 0 ]; then
-    warn "Nenhum pacote disponível para instalar no módulo '$module_name'."
+    warn "Nenhum pacote instalável foi encontrado no módulo '$module_name'."
     if [ "${#unavailable[@]}" -gt 0 ]; then
-      warn "Pacotes indisponíveis no APT atual:"
+      warn "Pacotes indisponíveis ou com dependências não resolvidas:"
       printf ' - %s\n' "${unavailable[@]}"
     fi
     return
@@ -46,7 +46,7 @@ install_packages() {
   echo "Pacotes a instalar em '$module_name':"
   printf ' - %s\n' "${installable[@]}"
   if [ "${#unavailable[@]}" -gt 0 ]; then
-    warn "Pacotes indisponíveis no APT atual (serão ignorados):"
+    warn "Pacotes indisponíveis ou com dependências não resolvidas (serão ignorados):"
     printf ' - %s\n' "${unavailable[@]}"
   fi
 

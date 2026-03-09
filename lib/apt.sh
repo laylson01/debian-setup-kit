@@ -274,6 +274,26 @@ ensure_privileges() {
   fi
 }
 
+ensure_gaming_prereqs() {
+  if [ "$INSTALL_GAMING" = false ]; then
+    return
+  fi
+
+  if dpkg --print-foreign-architectures | grep -qx 'i386'; then
+    return
+  fi
+
+  if [ "$DRY_RUN" = true ]; then
+    warn "Dry-run: stack gaming habilitaria a arquitetura i386 automaticamente."
+    return
+  fi
+
+  log "Habilitando arquitetura i386 (necessária para pacotes 32-bit de jogos/Steam)..."
+  as_root dpkg --add-architecture i386
+  NEEDS_APT_UPDATE_AFTER_ARCH_ADD=true
+  success "Arquitetura i386 habilitada."
+}
+
 package_installed() {
   dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q '^install ok installed$'
 }
@@ -282,4 +302,14 @@ package_available() {
   local candidate
   candidate="$(apt-cache policy "$1" 2>/dev/null | awk '/Candidate:/ {print $2; exit}')"
   [ -n "$candidate" ] && [ "$candidate" != "(none)" ]
+}
+
+package_installable() {
+  local pkg="$1"
+
+  if ! package_available "$pkg"; then
+    return 1
+  fi
+
+  "${APT_CMD[@]}" -s install --no-install-recommends "$pkg" >/dev/null 2>&1
 }

@@ -296,7 +296,8 @@ Exemplo com stacks específicas:
 ## Observações da stack de jogos
 
 - `steam-installer` normalmente requer repositórios `contrib`, `non-free` e `non-free-firmware`.
-- `wine32` pode exigir arquitetura `i386` habilitada (`dpkg --add-architecture i386` + `apt update`).
+- A stack `--gaming` habilita `i386` automaticamente quando necessário e atualiza os índices do APT.
+- Se o APT não conseguir resolver dependências do Steam (ex.: `steam-libs-i386`), o script agora ignora apenas esse pacote e continua os demais.
 - Alguns pacotes de jogos podem não existir em todos os codenames; o script ignora automaticamente os indisponíveis.
 
 ## FAQ
