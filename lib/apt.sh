@@ -290,6 +290,7 @@ ensure_gaming_prereqs() {
 
   log "Habilitando arquitetura i386 (necessária para pacotes 32-bit de jogos/Steam)..."
   as_root dpkg --add-architecture i386
+  # shellcheck disable=SC2034  # Lida em setup.sh após source deste arquivo.
   NEEDS_APT_UPDATE_AFTER_ARCH_ADD=true
   success "Arquitetura i386 habilitada."
 }
