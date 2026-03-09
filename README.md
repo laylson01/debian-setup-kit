@@ -98,6 +98,121 @@ Exemplo com stacks específicas:
 ./setup.sh --base --terminal --dev
 ```
 
+## Pacotes por stack
+
+### `--base`
+
+- `ca-certificates`
+- `curl`
+- `wget`
+- `gnupg`
+- `lsb-release`
+- `sudo`
+
+### `--terminal`
+
+- `vim`
+- `nano`
+- `less`
+- `bash-completion`
+- `tmux`
+- `screen`
+- `tree`
+- `file`
+- `unzip`
+- `zip`
+- `p7zip-full`
+- `rsync`
+- `jq`
+- `ripgrep`
+- `fd-find`
+- `fzf`
+- `htop`
+- `btop`
+- `ncdu`
+- `lsof`
+- `strace`
+- `xclip`
+
+### `--dev`
+
+- `git`
+- `build-essential`
+- `gcc`
+- `g++`
+- `make`
+- `cmake`
+- `ninja-build`
+- `pkg-config`
+- `gdb`
+- `valgrind`
+- `shellcheck`
+- `shfmt`
+- `sqlite3`
+- `python3`
+- `python3-pip`
+- `python3-venv`
+- `pipx`
+
+### `--network`
+
+- `iproute2`
+- `net-tools`
+- `dnsutils`
+- `traceroute`
+- `mtr-tiny`
+- `nmap`
+- `tcpdump`
+- `socat`
+- `netcat-openbsd`
+- `ethtool`
+- `whois`
+- `iputils-ping`
+- `openssh-client`
+- `openssh-server`
+- `sshpass`
+
+### `--automation`
+
+- `cron`
+- `ansible`
+- `ansible-lint`
+
+### `--embedded`
+
+- `git`
+- `python3`
+- `python3-pip`
+- `python3-venv`
+- `cmake`
+- `ninja-build`
+- `ccache`
+- `libffi-dev`
+- `libssl-dev`
+- `dfu-util`
+- `libusb-1.0-0`
+- `minicom`
+- `picocom`
+
+### `--optional`
+
+- `ufw`
+- `flatpak`
+
+### Perfil `minimal-server`
+
+- `ca-certificates`
+- `curl`
+- `wget`
+- `openssh-server`
+- `openssh-client`
+- `iproute2`
+- `iputils-ping`
+- `dnsutils`
+- `netcat-openbsd`
+- `rsync`
+- `tmux`
+
 ## FAQ
 
 ### 1) `sudo: user is not in the sudoers file`
