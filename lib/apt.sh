@@ -63,6 +63,49 @@ as_root() {
   fi
 }
 
+rollback_apt_sources() {
+  local latest_backup=""
+  latest_backup="$(find /var/backups -maxdepth 1 -type d -name 'debian-bootstrap-apt-*' | sort | tail -n 1)"
+
+  if [ -z "$latest_backup" ]; then
+    error "Nenhum backup de sources APT foi encontrado em /var/backups."
+    exit 1
+  fi
+
+  log "Backup mais recente encontrado: $latest_backup"
+
+  if [ "$DRY_RUN" = true ]; then
+    warn "Dry-run ativo: rollback não será aplicado."
+    return
+  fi
+
+  if [ "$ASSUME_YES" = false ]; then
+    local answer=""
+    read -r -p "Deseja restaurar este backup agora? [y/N] " answer
+    case "$answer" in
+      y|Y|yes|YES)
+        ;;
+      *)
+        warn "Rollback cancelado pelo usuário."
+        return
+        ;;
+    esac
+  fi
+
+  if [ -f "$latest_backup/sources.list" ]; then
+    as_root cp "$latest_backup/sources.list" /etc/apt/sources.list
+  fi
+
+  if [ -d "$latest_backup/sources.list.d" ]; then
+    as_root rm -rf /etc/apt/sources.list.d
+    as_root cp -a "$latest_backup/sources.list.d" /etc/apt/sources.list.d
+  fi
+
+  success "Sources APT restauradas a partir de $latest_backup."
+  log "Atualizando índices do APT após rollback..."
+  "${APT_CMD[@]}" update
+}
+
 auto_fix_apt_sources() {
   local target_codename="$1"
   local backup_dir="/var/backups/debian-bootstrap-apt-$(date +%Y%m%d-%H%M%S)"

@@ -37,7 +37,7 @@ Uso:
 
 Opções:
   --all           Instala todos os módulos
-  --profile NAME  Aplica um perfil pronto (ex.: minimal-server)
+  --profile NAME  Aplica um perfil pronto (ex.: minimal-server) ou lista com 'list'
   --base          Instala base do sistema
   --terminal      Instala utilitários de terminal
   --dev           Instala ferramentas de desenvolvimento
@@ -50,13 +50,19 @@ Opções:
   --interactive=cli          Força seleção por números no terminal
   --auto-fix-apt              Corrige automaticamente sources APT Debian desalinhadas
   --auto-fix-apt=preview      Mostra o que seria alterado, sem modificar o sistema
-  --no-upgrade    Não executa apt upgrade
+  --rollback-sources          Restaura o backup mais recente das sources APT
+  --skip-update   Não executa apt update
+  --skip-upgrade  Não executa apt upgrade
+  --no-upgrade    Alias de --skip-upgrade
+  --yes, -y       Executa sem prompts de confirmação
   --dry-run       Mostra ações, mas não instala
   --help, -h      Mostra esta ajuda
 
 Exemplos:
   ./setup.sh --all
+  ./setup.sh --profile list
   ./setup.sh --profile minimal-server
+  ./setup.sh --rollback-sources
   ./setup.sh --base --dev --network
   ./setup.sh --interactive
   ./setup.sh --interactive=cli
@@ -78,10 +84,36 @@ print_summary() {
   echo "  Embedded:   $INSTALL_EMBEDDED"
   echo "  Optional:   $INSTALL_OPTIONAL"
   echo "  Profile:    $PROFILE"
+  echo "  Update:     $DO_UPDATE"
   echo "  Upgrade:    $DO_UPGRADE"
   echo "  Dry-run:    $DRY_RUN"
+  echo "  Assume-yes: $ASSUME_YES"
   echo "  Auto-fix:   $AUTO_FIX_APT_MODE"
   echo
+}
+
+print_profiles() {
+  echo
+  echo "Perfis disponíveis:"
+  echo "  - minimal-server"
+  echo
+}
+
+confirm_execution() {
+  if [ "$DRY_RUN" = true ] || [ "$ASSUME_YES" = true ]; then
+    return
+  fi
+
+  local answer=""
+  read -r -p "Este comando vai alterar o sistema. Deseja continuar? [y/N] " answer
+  case "$answer" in
+    y|Y|yes|YES)
+      ;;
+    *)
+      warn "Execução cancelada pelo usuário."
+      exit 0
+      ;;
+  esac
 }
 
 print_welcome() {

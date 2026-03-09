@@ -90,6 +90,18 @@ while [ "$#" -gt 0 ]; do
     --no-upgrade)
       DO_UPGRADE=false
       ;;
+    --skip-update)
+      DO_UPDATE=false
+      ;;
+    --skip-upgrade)
+      DO_UPGRADE=false
+      ;;
+    --rollback-sources)
+      ROLLBACK_SOURCES=true
+      ;;
+    --yes|-y)
+      ASSUME_YES=true
+      ;;
     --dry-run)
       DRY_RUN=true
       ;;
@@ -98,6 +110,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --auto-fix-apt=preview)
       AUTO_FIX_APT_MODE="preview"
+      DRY_RUN=true
       ;;
     --auto-fix-apt=apply)
       AUTO_FIX_APT_MODE="apply"
@@ -116,16 +129,33 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
+if [ "$PROFILE" = "list" ]; then
+  print_profiles
+  exit 0
+fi
+
 if [ "$INTERACTIVE" = true ]; then
-  interactive_select_modules
+  if [ "$ASSUME_YES" = true ]; then
+    warn "--yes ativo: modo interativo será ignorado."
+  else
+    interactive_select_modules
+  fi
+fi
+
+if [ "$ROLLBACK_SOURCES" = true ]; then
+  require_tools
+  ensure_privileges
+  rollback_apt_sources
+  success "Rollback concluído."
+  exit 0
 fi
 
 case "$PROFILE" in
-  none|minimal-server)
+  none|minimal-server|list)
     ;;
   *)
     error "Perfil inválido: $PROFILE"
-    error "Perfis disponíveis: minimal-server"
+    error "Perfis disponíveis: minimal-server (ou use --profile list)"
     exit 1
     ;;
 esac
@@ -135,12 +165,15 @@ ensure_any_module_selected
 print_welcome
 print_summary
 ensure_privileges
+confirm_execution
 
 log "Atualizando índices do APT..."
-if [ "$DRY_RUN" = false ]; then
+if [ "$DO_UPDATE" = true ] && [ "$DRY_RUN" = false ]; then
   "${APT_CMD[@]}" update
   ensure_apt_release_consistency
   ensure_apt_health
+elif [ "$DO_UPDATE" = false ]; then
+  warn "apt update foi ignorado por opção (--skip-update)."
 else
   warn "Dry-run ativo: apt update não será executado."
 fi
