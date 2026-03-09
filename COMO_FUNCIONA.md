@@ -34,12 +34,14 @@ Quando você roda o script, ele segue esta ordem:
 5. Mostra resumo das opções escolhidas.
 6. Executa `apt update` (exceto em `--dry-run`).
 7. Valida consistência de release Debian (codename do sistema x repositórios).
-8. Executa `apt-get check` para validar saúde das dependências.
-9. Executa `apt upgrade -y` (a menos que `--no-upgrade` ou `--dry-run`).
-10. Processa os módulos selecionados e instala apenas pacotes faltantes.
-11. Se não for `--dry-run`, cria diretórios de trabalho.
-12. Se `openssh-server` estiver instalado, tenta habilitar/iniciar SSH.
-13. Mostra mensagem final de sucesso.
+8. Se `--auto-fix-apt` estiver ativo, tenta corrigir desalinhamentos automaticamente.
+9. Se `--auto-fix-apt=preview` estiver ativo, mostra o que mudaria sem alterar arquivos.
+10. Executa `apt-get check` para validar saúde das dependências.
+11. Executa `apt upgrade -y` (a menos que `--no-upgrade` ou `--dry-run`).
+12. Processa os módulos selecionados e instala apenas pacotes faltantes.
+13. Se não for `--dry-run`, cria diretórios de trabalho.
+14. Se `openssh-server` estiver instalado, tenta habilitar/iniciar SSH.
+15. Mostra mensagem final de sucesso.
 
 ## 4. Opções disponíveis
 
@@ -51,6 +53,8 @@ Quando você roda o script, ele segue esta ordem:
 - `--automation`: ferramentas de automação.
 - `--embedded`: ferramentas para ESP32/embedded.
 - `--optional`: pacotes opcionais.
+- `--auto-fix-apt`: tenta corrigir automaticamente sources Debian desalinhadas.
+- `--auto-fix-apt=preview`: mostra o que mudaria, sem alterar o sistema.
 - `--no-upgrade`: não roda `apt upgrade`.
 - `--dry-run`: simula, não altera sistema.
 - `--help` / `-h`: ajuda.
@@ -73,6 +77,7 @@ Cada flag altera variáveis booleanas internas:
 - `INSTALL_BASE`, `INSTALL_DEV`, etc.
 - `DO_UPGRADE` (por padrão `true`)
 - `DRY_RUN` (por padrão `false`)
+- `AUTO_FIX_APT_MODE` (por padrão `off`: `off`, `apply` ou `preview`)
 
 Sem argumentos, o script mostra ajuda e sai.
 
@@ -82,7 +87,7 @@ Função `require_tools()`:
 
 - aborta se não houver `apt-get`
 - aborta se não houver `dpkg`
-- aborta se não houver `sudo`
+- aborta se não houver `sudo` quando não estiver rodando como `root`
 
 Função `ensure_any_module_selected()`:
 
@@ -100,7 +105,9 @@ Antes de instalar, o script imprime um resumo com:
 
 - Sempre tenta `apt update` (exceto `--dry-run`).
 - Valida se os repositórios Debian usam o mesmo codename do sistema (ex.: tudo `bookworm`).
-- Bloqueia se detectar mistura de releases (ex.: `bookworm` + `trixie`).
+- Bloqueia se detectar mistura de releases (ex.: `bookworm` + `trixie`) quando `--auto-fix-apt` não é usado.
+- Com `--auto-fix-apt`, tenta backup + alinhamento automático das entradas Debian.
+- Com `--auto-fix-apt=preview`, exibe o diff das alterações sugeridas sem aplicar.
 - Executa `apt-get check` para detectar dependências quebradas antes da instalação.
 - Só então segue para `apt upgrade -y` quando `DO_UPGRADE=true`.
 

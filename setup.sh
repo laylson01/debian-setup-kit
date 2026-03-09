@@ -78,6 +78,8 @@ Opções:
   --automation    Instala ferramentas de automação
   --embedded      Instala ferramentas para ESP32/embedded
   --optional      Instala pacotes opcionais
+  --auto-fix-apt              Corrige automaticamente sources APT Debian desalinhadas
+  --auto-fix-apt=preview      Mostra o que seria alterado, sem modificar o sistema
   --no-upgrade    Não executa apt upgrade
   --dry-run       Mostra ações, mas não instala
   --help, -h      Mostra esta ajuda
@@ -86,6 +88,8 @@ Exemplos:
   ./setup.sh --all
   ./setup.sh --base --dev --network
   ./setup.sh --terminal --automation --embedded
+  ./setup.sh --auto-fix-apt --dev
+  ./setup.sh --auto-fix-apt=preview --dev
   ./setup.sh --all --dry-run
 EOH
 }
@@ -126,15 +130,7 @@ get_system_codename() {
   printf '%s\n' ""
 }
 
-ensure_apt_release_consistency() {
-  local system_codename
-  system_codename="$(get_system_codename)"
-
-  if [ -z "$system_codename" ]; then
-    warn "Não foi possível detectar o codename do sistema; pulando checagem de consistência de release."
-    return
-  fi
-
+get_debian_repo_codenames() {
   local repo_suites
   repo_suites="$(
     apt-cache policy \
@@ -145,33 +141,164 @@ ensure_apt_release_consistency() {
   )"
 
   if [ -z "$repo_suites" ]; then
+    printf '%s\n' ""
+    return
+  fi
+
+  printf '%s\n' "$repo_suites" \
+    | sed -E 's/-(security|updates|backports|proposed-updates)$//' \
+    | sort -u
+}
+
+as_root() {
+  if [ "$EUID" -eq 0 ]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
+auto_fix_apt_sources() {
+  local target_codename="$1"
+  local backup_dir="/var/backups/debian-bootstrap-apt-$(date +%Y%m%d-%H%M%S)"
+
+  log "Executando correção automática de sources APT para '$target_codename'..."
+  log "Salvando backup em: $backup_dir"
+
+  as_root mkdir -p "$backup_dir"
+  if [ -f /etc/apt/sources.list ]; then
+    as_root cp /etc/apt/sources.list "$backup_dir/sources.list"
+  fi
+  if [ -d /etc/apt/sources.list.d ]; then
+    as_root cp -a /etc/apt/sources.list.d "$backup_dir/sources.list.d"
+  fi
+
+  if [ -f /etc/apt/sources.list ]; then
+    as_root sed -E -i \
+      "/^[[:space:]]*deb(-src)?[[:space:]].*(debian\\.org|debian-security)/ s/\\b(bullseye|bookworm|trixie)(-security|-updates|-backports|-proposed-updates)?\\b/${target_codename}\\2/g" \
+      /etc/apt/sources.list
+  fi
+
+  if [ -d /etc/apt/sources.list.d ]; then
+    while IFS= read -r file; do
+      as_root sed -E -i \
+        "/^[[:space:]]*deb(-src)?[[:space:]].*(debian\\.org|debian-security)/ s/\\b(bullseye|bookworm|trixie)(-security|-updates|-backports|-proposed-updates)?\\b/${target_codename}\\2/g" \
+        "$file"
+    done < <(find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list')
+  fi
+
+  log "Atualizando índices do APT após correção automática..."
+  "${APT_CMD[@]}" update
+}
+
+preview_auto_fix_apt_sources() {
+  local target_codename="$1"
+  local changed=false
+  local file
+
+  log "Prévia de correção automática para '$target_codename' (sem alterações no sistema)..."
+
+  if [ -f /etc/apt/sources.list ]; then
+    local tmp
+    tmp="$(mktemp)"
+    sed -E \
+      "/^[[:space:]]*deb(-src)?[[:space:]].*(debian\\.org|debian-security)/ s/\\b(bullseye|bookworm|trixie)(-security|-updates|-backports|-proposed-updates)?\\b/${target_codename}\\2/g" \
+      /etc/apt/sources.list >"$tmp"
+    if ! cmp -s /etc/apt/sources.list "$tmp"; then
+      changed=true
+      echo
+      echo "Arquivo que mudaria: /etc/apt/sources.list"
+      diff -u /etc/apt/sources.list "$tmp" || true
+    fi
+    rm -f "$tmp"
+  fi
+
+  if [ -d /etc/apt/sources.list.d ]; then
+    while IFS= read -r file; do
+      local tmp
+      tmp="$(mktemp)"
+      sed -E \
+        "/^[[:space:]]*deb(-src)?[[:space:]].*(debian\\.org|debian-security)/ s/\\b(bullseye|bookworm|trixie)(-security|-updates|-backports|-proposed-updates)?\\b/${target_codename}\\2/g" \
+        "$file" >"$tmp"
+      if ! cmp -s "$file" "$tmp"; then
+        changed=true
+        echo
+        echo "Arquivo que mudaria: $file"
+        diff -u "$file" "$tmp" || true
+      fi
+      rm -f "$tmp"
+    done < <(find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list')
+  fi
+
+  if [ "$changed" = false ]; then
+    success "Prévia concluída: nenhuma mudança seria necessária nas sources Debian."
+  else
+    warn "Prévia concluída. Para aplicar, rode com --auto-fix-apt."
+  fi
+}
+
+ensure_apt_release_consistency() {
+  local system_codename
+  system_codename="$(get_system_codename)"
+
+  if [ -z "$system_codename" ]; then
+    warn "Não foi possível detectar o codename do sistema; pulando checagem de consistência de release."
+    return
+  fi
+
+  local repo_codenames
+  repo_codenames="$(get_debian_repo_codenames)"
+  if [ -z "$repo_codenames" ]; then
     warn "Não foi possível detectar codenames Debian nos repositórios; pulando checagem de consistência de release."
     return
   fi
 
-  # Suites como bookworm-updates/bookworm-security são válidas para a mesma release base.
-  local repo_codenames
-  repo_codenames="$(
-    printf '%s\n' "$repo_suites" \
-      | sed -E 's/-(security|updates|backports|proposed-updates)$//' \
-      | sort -u
-  )"
-
   local codename_count
   codename_count="$(printf '%s\n' "$repo_codenames" | sed '/^$/d' | wc -l)"
   if [ "$codename_count" -gt 1 ]; then
+    if [ "$AUTO_FIX_APT_MODE" = "preview" ]; then
+      preview_auto_fix_apt_sources "$system_codename"
+    fi
+
+    if [ "$AUTO_FIX_APT_MODE" = "apply" ] && [ "$DRY_RUN" = false ]; then
+      warn "Mistura de releases detectada. Tentando correção automática (--auto-fix-apt)..."
+      auto_fix_apt_sources "$system_codename"
+      repo_codenames="$(get_debian_repo_codenames)"
+      codename_count="$(printf '%s\n' "$repo_codenames" | sed '/^$/d' | wc -l)"
+      if [ "$codename_count" -le 1 ] && printf '%s\n' "$repo_codenames" | grep -qx "$system_codename"; then
+        success "Sources APT alinhadas automaticamente para '$system_codename'."
+        return
+      fi
+      error "A correção automática não conseguiu alinhar os repositórios Debian."
+    fi
+
     error "Foram detectados múltiplos codenames Debian nos repositórios APT:"
     printf ' - %s\n' $repo_codenames >&2
     error "Isso indica mistura de releases e pode quebrar dependências."
-    error "Ajuste os repositórios para uma única release (ex.: bullseye, bookworm ou trixie)."
+    error "Ajuste os repositórios para uma única release (ou use --auto-fix-apt / --auto-fix-apt=preview)."
     exit 1
   fi
 
   if ! printf '%s\n' "$repo_codenames" | grep -qx "$system_codename"; then
+    if [ "$AUTO_FIX_APT_MODE" = "preview" ]; then
+      preview_auto_fix_apt_sources "$system_codename"
+    fi
+
+    if [ "$AUTO_FIX_APT_MODE" = "apply" ] && [ "$DRY_RUN" = false ]; then
+      warn "Sistema e repositórios desalinhados. Tentando correção automática (--auto-fix-apt)..."
+      auto_fix_apt_sources "$system_codename"
+      repo_codenames="$(get_debian_repo_codenames)"
+      if printf '%s\n' "$repo_codenames" | grep -qx "$system_codename"; then
+        success "Sources APT alinhadas automaticamente para '$system_codename'."
+        return
+      fi
+      error "A correção automática não conseguiu alinhar os repositórios Debian."
+    fi
+
     error "Codename do sistema: $system_codename"
     error "Codename Debian detectado nos repositórios: $repo_codenames"
     error "Sistema e repositórios estão desalinhados; isso causa conflitos de dependência."
-    error "Alinhe os repositórios ao codename do sistema e rode: apt update && apt --fix-broken install"
+    error "Alinhe os repositórios ao codename do sistema e rode: apt update && apt --fix-broken install (ou use --auto-fix-apt / --auto-fix-apt=preview)."
     exit 1
   fi
 }
@@ -268,7 +395,7 @@ enable_ssh_if_installed() {
       return
     fi
 
-    if sudo systemctl enable ssh >/dev/null 2>&1 && sudo systemctl start ssh >/dev/null 2>&1; then
+    if as_root systemctl enable ssh >/dev/null 2>&1 && as_root systemctl start ssh >/dev/null 2>&1; then
       success "SSH habilitado."
     else
       warn "Não foi possível habilitar/iniciar o serviço SSH automaticamente."
@@ -288,6 +415,7 @@ print_summary() {
   echo "  Optional:   $INSTALL_OPTIONAL"
   echo "  Upgrade:    $DO_UPGRADE"
   echo "  Dry-run:    $DRY_RUN"
+  echo "  Auto-fix:   $AUTO_FIX_APT_MODE"
   echo
 }
 
@@ -401,6 +529,7 @@ INSTALL_EMBEDDED=false
 INSTALL_OPTIONAL=false
 DO_UPGRADE=true
 DRY_RUN=false
+AUTO_FIX_APT_MODE="off"
 
 # ---------- Parse argumentos ----------
 if [ "$#" -eq 0 ]; then
@@ -445,6 +574,15 @@ while [ "$#" -gt 0 ]; do
       ;;
     --dry-run)
       DRY_RUN=true
+      ;;
+    --auto-fix-apt)
+      AUTO_FIX_APT_MODE="apply"
+      ;;
+    --auto-fix-apt=preview)
+      AUTO_FIX_APT_MODE="preview"
+      ;;
+    --auto-fix-apt=apply)
+      AUTO_FIX_APT_MODE="apply"
       ;;
     --help|-h)
       show_help

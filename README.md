@@ -19,13 +19,15 @@ O objetivo é deixar uma instalação nova do Debian pronta para estudo e trabal
 - tratamento de erro com indicação de linha/comando
 - validação de consistência de release Debian (sistema x repositórios)
 - validação de integridade do APT antes da instalação
+- opção `--auto-fix-apt` para alinhar automaticamente sources Debian
+- opção `--auto-fix-apt=preview` para mostrar alterações sem aplicar
 - criação de diretórios úteis
 - habilitação automática do SSH quando instalado
 
 ## Requisitos
 
 - Debian ou derivado com `apt-get`
-- `sudo` instalado
+- `sudo` instalado (quando não executar como `root`)
 - acesso à internet
 
 ## Estrutura dos módulos
@@ -126,6 +128,24 @@ chmod +x setup.sh
 ./setup.sh --all --no-upgrade
 ```
 
+### Corrigir sources Debian automaticamente (iniciante)
+
+```bash
+./setup.sh --auto-fix-apt --dev
+```
+
+Quando houver desalinhamento entre codename do sistema e repositórios Debian, o script:
+
+- cria backup de `/etc/apt/sources.list*`
+- tenta alinhar as entradas Debian para o codename do sistema
+- executa `apt update` novamente
+
+### Ver prévia da correção (sem alterar nada)
+
+```bash
+./setup.sh --auto-fix-apt=preview --dev
+```
+
 ## Exemplos práticos
 
 ### Workstation para desenvolvimento
@@ -170,7 +190,8 @@ Também é recomendado revisar os pacotes do módulo `--optional` para ajustar a
 ## Limitações e comportamento esperado
 
 - O script foi feito para Debian/derivados com `apt-get`, `dpkg` e `sudo` (ou execução como `root`).
-- O script bloqueia execução quando detecta mistura de releases Debian nos repositórios APT.
+- O script bloqueia execução quando detecta mistura de releases Debian nos repositórios APT (ou tenta corrigir com `--auto-fix-apt`).
+- Com `--auto-fix-apt=preview`, o script apenas exibe o diff das mudanças sugeridas.
 - O script também bloqueia quando o `apt-get check` detecta dependências quebradas.
 - A habilitação automática do SSH depende de `systemctl` (ambientes sem `systemd` podem exigir configuração manual do serviço).
 - Um pacote é considerado instalado apenas quando está no estado `install ok installed`.
