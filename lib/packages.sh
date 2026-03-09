@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+
+BASE_PACKAGES=(
+  ca-certificates
+  curl
+  wget
+  gnupg
+  lsb-release
+  sudo
+)
+
+TERMINAL_PACKAGES=(
+  vim
+  nano
+  less
+  bash-completion
+  tmux
+  screen
+  tree
+  file
+  unzip
+  zip
+  p7zip-full
+  rsync
+  jq
+  ripgrep
+  fd-find
+  fzf
+  htop
+  btop
+  ncdu
+  lsof
+  strace
+  xclip
+)
+
+DEV_PACKAGES=(
+  git
+  build-essential
+  gcc
+  g++
+  make
+  cmake
+  ninja-build
+  pkg-config
+  gdb
+  valgrind
+  shellcheck
+  shfmt
+  sqlite3
+  python3
+  python3-pip
+  python3-venv
+  pipx
+)
+
+NETWORK_PACKAGES=(
+  iproute2
+  net-tools
+  dnsutils
+  traceroute
+  mtr-tiny
+  nmap
+  tcpdump
+  socat
+  netcat-openbsd
+  ethtool
+  whois
+  iputils-ping
+  openssh-client
+  openssh-server
+  sshpass
+)
+
+AUTOMATION_PACKAGES=(
+  cron
+  ansible
+  ansible-lint
+)
+
+EMBEDDED_PACKAGES=(
+  git
+  python3
+  python3-pip
+  python3-venv
+  cmake
+  ninja-build
+  ccache
+  libffi-dev
+  libssl-dev
+  dfu-util
+  libusb-1.0-0
+  minicom
+  picocom
+)
+
+OPTIONAL_PACKAGES=(
+  ufw
+  flatpak
+)
+
+MINIMAL_SERVER_PACKAGES=(
+  ca-certificates
+  curl
+  wget
+  openssh-server
+  openssh-client
+  iproute2
+  iputils-ping
+  dnsutils
+  netcat-openbsd
+  rsync
+  tmux
+)
