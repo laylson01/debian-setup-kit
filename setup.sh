@@ -135,8 +135,8 @@ ensure_apt_release_consistency() {
     return
   fi
 
-  local repo_codenames
-  repo_codenames="$(
+  local repo_suites
+  repo_suites="$(
     apt-cache policy \
       | grep 'release ' \
       | grep 'o=Debian' \
@@ -144,10 +144,18 @@ ensure_apt_release_consistency() {
       | sort -u
   )"
 
-  if [ -z "$repo_codenames" ]; then
+  if [ -z "$repo_suites" ]; then
     warn "Não foi possível detectar codenames Debian nos repositórios; pulando checagem de consistência de release."
     return
   fi
+
+  # Suites como bookworm-updates/bookworm-security são válidas para a mesma release base.
+  local repo_codenames
+  repo_codenames="$(
+    printf '%s\n' "$repo_suites" \
+      | sed -E 's/-(security|updates|backports|proposed-updates)$//' \
+      | sort -u
+  )"
 
   local codename_count
   codename_count="$(printf '%s\n' "$repo_codenames" | sed '/^$/d' | wc -l)"
