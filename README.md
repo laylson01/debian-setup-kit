@@ -61,6 +61,12 @@ Stack para usuário comum (desktop):
 ./setup.sh --desktop-basic
 ```
 
+Desktop completo para usuário comum:
+
+```bash
+./setup.sh --desktop-full
+```
+
 ## Correção de repositórios APT (quando necessário)
 
 Aplicar correção automática:
@@ -98,6 +104,7 @@ Restaurar último backup de sources:
 - `--embedded`
 - `--optional`
 - `--desktop-basic`
+- `--desktop-full`
 
 Exemplo com stacks específicas:
 
@@ -217,6 +224,25 @@ Exemplo com stacks específicas:
 - `evince`
 - `file-roller`
 - `gnome-screenshot`
+
+### `--desktop-full`
+
+- `chromium`
+- `vlc`
+- `ffmpeg`
+- `pavucontrol`
+- `thunderbird`
+- `libreoffice`
+- `evince`
+- `file-roller`
+- `gnome-screenshot`
+- `gimp`
+- `gnome-disk-utility`
+- `baobab`
+- `remmina`
+- `keepassxc`
+- `transmission-gtk`
+- `gparted`
 
 ### Perfil `minimal-server`
 

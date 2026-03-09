@@ -112,6 +112,17 @@ DESKTOP_BASIC_PACKAGES=(
   gnome-screenshot
 )
 
+DESKTOP_FULL_PACKAGES=(
+  "${DESKTOP_BASIC_PACKAGES[@]}"
+  gimp
+  gnome-disk-utility
+  baobab
+  remmina
+  keepassxc
+  transmission-gtk
+  gparted
+)
+
 MINIMAL_SERVER_PACKAGES=(
   ca-certificates
   curl

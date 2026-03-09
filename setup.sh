@@ -46,6 +46,7 @@ while [ "$#" -gt 0 ]; do
       INSTALL_EMBEDDED=true
       INSTALL_OPTIONAL=true
       INSTALL_DESKTOP_BASIC=true
+      INSTALL_DESKTOP_FULL=true
       ;;
     --profile)
       shift
@@ -78,6 +79,9 @@ while [ "$#" -gt 0 ]; do
       ;;
     --desktop-basic)
       INSTALL_DESKTOP_BASIC=true
+      ;;
+    --desktop-full)
+      INSTALL_DESKTOP_FULL=true
       ;;
     --interactive)
       INTERACTIVE=true
@@ -201,6 +205,7 @@ $INSTALL_AUTOMATION && install_packages "automation" "${AUTOMATION_PACKAGES[@]}"
 $INSTALL_EMBEDDED && install_packages "embedded" "${EMBEDDED_PACKAGES[@]}"
 $INSTALL_OPTIONAL && install_packages "optional" "${OPTIONAL_PACKAGES[@]}"
 $INSTALL_DESKTOP_BASIC && install_packages "desktop-basic" "${DESKTOP_BASIC_PACKAGES[@]}"
+$INSTALL_DESKTOP_FULL && install_packages "desktop-full" "${DESKTOP_FULL_PACKAGES[@]}"
 [ "$PROFILE" = "minimal-server" ] && install_packages "profile:minimal-server" "${MINIMAL_SERVER_PACKAGES[@]}"
 
 if [ "$DRY_RUN" = false ]; then

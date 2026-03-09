@@ -277,3 +277,9 @@ ensure_privileges() {
 package_installed() {
   dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q '^install ok installed$'
 }
+
+package_available() {
+  local candidate
+  candidate="$(apt-cache policy "$1" 2>/dev/null | awk '/Candidate:/ {print $2; exit}')"
+  [ -n "$candidate" ] && [ "$candidate" != "(none)" ]
+}

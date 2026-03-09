@@ -24,18 +24,41 @@ install_packages() {
     return
   fi
 
+  local installable=()
+  local unavailable=()
+  for pkg in "${missing[@]}"; do
+    if package_available "$pkg"; then
+      installable+=("$pkg")
+    else
+      unavailable+=("$pkg")
+    fi
+  done
+
+  if [ "${#installable[@]}" -eq 0 ]; then
+    warn "Nenhum pacote disponível para instalar no módulo '$module_name'."
+    if [ "${#unavailable[@]}" -gt 0 ]; then
+      warn "Pacotes indisponíveis no APT atual:"
+      printf ' - %s\n' "${unavailable[@]}"
+    fi
+    return
+  fi
+
   echo "Pacotes a instalar em '$module_name':"
-  printf ' - %s\n' "${missing[@]}"
+  printf ' - %s\n' "${installable[@]}"
+  if [ "${#unavailable[@]}" -gt 0 ]; then
+    warn "Pacotes indisponíveis no APT atual (serão ignorados):"
+    printf ' - %s\n' "${unavailable[@]}"
+  fi
 
   if [ "$DRY_RUN" = true ]; then
     warn "Dry-run ativo: nada será instalado."
     return
   fi
 
-  "${APT_CMD[@]}" install -y --no-install-recommends "${missing[@]}"
-  INSTALLED_THIS_RUN+=("${missing[@]}")
+  "${APT_CMD[@]}" install -y --no-install-recommends "${installable[@]}"
+  INSTALLED_THIS_RUN+=("${installable[@]}")
   echo "Pacotes instalados em '$module_name':"
-  printf ' - %s\n' "${missing[@]}"
+  printf ' - %s\n' "${installable[@]}"
   success "Módulo '$module_name' concluído."
 }
 
