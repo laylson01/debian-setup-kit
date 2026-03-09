@@ -72,6 +72,7 @@ Uso:
 
 Opções:
   --all           Instala todos os módulos
+  --profile NAME  Aplica um perfil pronto (ex.: minimal-server)
   --base          Instala base do sistema
   --terminal      Instala utilitários de terminal
   --dev           Instala ferramentas de desenvolvimento
@@ -90,6 +91,7 @@ Opções:
 
 Exemplos:
   ./setup.sh --all
+  ./setup.sh --profile minimal-server
   ./setup.sh --base --dev --network
   ./setup.sh --interactive
   ./setup.sh --interactive=cli
@@ -332,7 +334,7 @@ ensure_privileges() {
 }
 
 ensure_any_module_selected() {
-  if ! $INSTALL_BASE && ! $INSTALL_TERMINAL && ! $INSTALL_DEV && ! $INSTALL_NETWORK && ! $INSTALL_AUTOMATION && ! $INSTALL_EMBEDDED && ! $INSTALL_OPTIONAL; then
+  if ! $INSTALL_BASE && ! $INSTALL_TERMINAL && ! $INSTALL_DEV && ! $INSTALL_NETWORK && ! $INSTALL_AUTOMATION && ! $INSTALL_EMBEDDED && ! $INSTALL_OPTIONAL && [ "$PROFILE" = "none" ]; then
     warn "Nenhum módulo selecionado."
     echo
     show_help
@@ -522,9 +524,27 @@ print_summary() {
   echo "  Automation: $INSTALL_AUTOMATION"
   echo "  Embedded:   $INSTALL_EMBEDDED"
   echo "  Optional:   $INSTALL_OPTIONAL"
+  echo "  Profile:    $PROFILE"
   echo "  Upgrade:    $DO_UPGRADE"
   echo "  Dry-run:    $DRY_RUN"
   echo "  Auto-fix:   $AUTO_FIX_APT_MODE"
+  echo
+}
+
+print_welcome() {
+  echo
+  echo "========================================"
+  echo "                 Setup                  "
+  echo "========================================"
+  echo "Stacks disponíveis:"
+  echo "  - base"
+  echo "  - terminal"
+  echo "  - dev"
+  echo "  - network"
+  echo "  - automation"
+  echo "  - embedded"
+  echo "  - optional"
+  echo "========================================"
   echo
 }
 
@@ -653,6 +673,20 @@ OPTIONAL_PACKAGES=(
   flatpak
 )
 
+MINIMAL_SERVER_PACKAGES=(
+  ca-certificates
+  curl
+  wget
+  openssh-server
+  openssh-client
+  iproute2
+  iputils-ping
+  dnsutils
+  netcat-openbsd
+  rsync
+  tmux
+)
+
 # ---------- Defaults ----------
 INSTALL_BASE=false
 INSTALL_TERMINAL=false
@@ -666,6 +700,7 @@ DRY_RUN=false
 AUTO_FIX_APT_MODE="off"
 INTERACTIVE=false
 INTERACTIVE_MODE="auto"
+PROFILE="none"
 
 # ---------- Parse argumentos ----------
 if [ "$#" -eq 0 ]; then
@@ -683,6 +718,14 @@ while [ "$#" -gt 0 ]; do
       INSTALL_AUTOMATION=true
       INSTALL_EMBEDDED=true
       INSTALL_OPTIONAL=true
+      ;;
+    --profile)
+      shift
+      if [ -z "${1:-}" ]; then
+        error "Informe o nome do perfil após --profile."
+        exit 1
+      fi
+      PROFILE="$1"
       ;;
     --base)
       INSTALL_BASE=true
@@ -750,8 +793,19 @@ if [ "$INTERACTIVE" = true ]; then
   interactive_select_modules
 fi
 
+case "$PROFILE" in
+  none|minimal-server)
+    ;;
+  *)
+    error "Perfil inválido: $PROFILE"
+    error "Perfis disponíveis: minimal-server"
+    exit 1
+    ;;
+esac
+
 require_tools
 ensure_any_module_selected
+print_welcome
 print_summary
 ensure_privileges
 
@@ -782,6 +836,7 @@ $INSTALL_NETWORK && install_packages "network" "${NETWORK_PACKAGES[@]}"
 $INSTALL_AUTOMATION && install_packages "automation" "${AUTOMATION_PACKAGES[@]}"
 $INSTALL_EMBEDDED && install_packages "embedded" "${EMBEDDED_PACKAGES[@]}"
 $INSTALL_OPTIONAL && install_packages "optional" "${OPTIONAL_PACKAGES[@]}"
+[ "$PROFILE" = "minimal-server" ] && install_packages "profile:minimal-server" "${MINIMAL_SERVER_PACKAGES[@]}"
 
 if [ "$DRY_RUN" = false ]; then
   create_directories
