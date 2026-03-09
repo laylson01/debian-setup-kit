@@ -47,6 +47,7 @@ Opções:
   --optional      Instala pacotes opcionais
   --desktop-basic Instala apps básicos para usuário final (browser, mídia, e-mail)
   --desktop-full  Instala desktop completo para usuário final
+  --list-packages Lista pacotes por stack e sai
   --interactive              Seleciona stacks por teclado (auto)
   --interactive=tui          Força checklist com whiptail
   --interactive=cli          Força seleção por números no terminal
@@ -66,6 +67,7 @@ Exemplos:
   ./setup.sh --profile minimal-server
   ./setup.sh --rollback-sources
   ./setup.sh --base --dev --network
+  ./setup.sh --list-packages
   ./setup.sh --desktop-basic
   ./setup.sh --desktop-full
   ./setup.sh --interactive
@@ -102,6 +104,52 @@ print_profiles() {
   echo
   echo "Perfis disponíveis:"
   echo "  - minimal-server"
+  echo
+}
+
+print_package_catalog() {
+  echo
+  echo "Pacotes por stack:"
+
+  echo
+  echo "[base]"
+  printf ' - %s\n' "${BASE_PACKAGES[@]}"
+
+  echo
+  echo "[terminal]"
+  printf ' - %s\n' "${TERMINAL_PACKAGES[@]}"
+
+  echo
+  echo "[dev]"
+  printf ' - %s\n' "${DEV_PACKAGES[@]}"
+
+  echo
+  echo "[network]"
+  printf ' - %s\n' "${NETWORK_PACKAGES[@]}"
+
+  echo
+  echo "[automation]"
+  printf ' - %s\n' "${AUTOMATION_PACKAGES[@]}"
+
+  echo
+  echo "[embedded]"
+  printf ' - %s\n' "${EMBEDDED_PACKAGES[@]}"
+
+  echo
+  echo "[optional]"
+  printf ' - %s\n' "${OPTIONAL_PACKAGES[@]}"
+
+  echo
+  echo "[desktop-basic]"
+  printf ' - %s\n' "${DESKTOP_BASIC_PACKAGES[@]}"
+
+  echo
+  echo "[desktop-full]"
+  printf ' - %s\n' "${DESKTOP_FULL_PACKAGES[@]}"
+
+  echo
+  echo "[profile:minimal-server]"
+  printf ' - %s\n' "${MINIMAL_SERVER_PACKAGES[@]}"
   echo
 }
 

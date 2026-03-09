@@ -55,6 +55,12 @@ Listar perfis disponíveis:
 ./setup.sh --profile list
 ```
 
+Listar todos os pacotes por stack (sem instalar):
+
+```bash
+./setup.sh --list-packages
+```
+
 Stack para usuário comum (desktop):
 
 ```bash
@@ -93,6 +99,7 @@ Restaurar último backup de sources:
 - `--skip-update`: pula `apt update`
 - `--skip-upgrade`: pula `apt upgrade`
 - `--yes` / `-y`: executa sem pergunta de confirmação
+- `--list-packages`: mostra pacotes por stack e sai
 
 ## Stacks disponíveis
 

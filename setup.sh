@@ -83,6 +83,9 @@ while [ "$#" -gt 0 ]; do
     --desktop-full)
       INSTALL_DESKTOP_FULL=true
       ;;
+    --list-packages)
+      LIST_PACKAGES=true
+      ;;
     --interactive)
       INTERACTIVE=true
       INTERACTIVE_MODE="auto"
@@ -139,6 +142,12 @@ done
 
 if [ "$PROFILE" = "list" ]; then
   print_profiles
+  exit 0
+fi
+
+if [ "$LIST_PACKAGES" = true ]; then
+  print_welcome
+  print_package_catalog
   exit 0
 fi
 
