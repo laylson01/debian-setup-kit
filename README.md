@@ -297,6 +297,7 @@ Exemplo com stacks específicas:
 
 - `steam-installer` normalmente requer repositórios `contrib`, `non-free` e `non-free-firmware`.
 - A stack `--gaming` habilita `i386` automaticamente quando necessário e atualiza os índices do APT.
+- Após instalar `steam-installer`, o script tenta iniciar o Steam automaticamente no usuário normal (quando detectável em sessão gráfica).
 - Se o APT não conseguir resolver dependências do Steam (ex.: `steam-libs-i386`), o script agora ignora apenas esse pacote e continua os demais.
 - Alguns pacotes de jogos podem não existir em todos os codenames; o script ignora automaticamente os indisponíveis.
 
