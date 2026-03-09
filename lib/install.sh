@@ -104,11 +104,28 @@ try_launch_steam_for_normal_user() {
     target_user="$SUDO_USER"
   elif [ "$EUID" -ne 0 ]; then
     target_user="$USER"
+  elif [ -n "${LOGNAME:-}" ] && [ "${LOGNAME}" != "root" ]; then
+    target_user="$LOGNAME"
+  elif command -v logname >/dev/null 2>&1; then
+    target_user="$(logname 2>/dev/null || true)"
+    if [ "$target_user" = "root" ]; then
+      target_user=""
+    fi
+  fi
+
+  if [ -z "$target_user" ] && [ -n "${PKEXEC_UID:-}" ]; then
+    target_user="$(id -nu "$PKEXEC_UID" 2>/dev/null || true)"
+  fi
+
+  if [ -z "$target_user" ] && [ "$EUID" -eq 0 ]; then
+    target_user="$(
+      awk -F: '$3 >= 1000 && $1 != "nobody" && $7 !~ /(nologin|false)/ { print $1; exit }' /etc/passwd
+    )"
   fi
 
   if [ -z "$target_user" ] || [ "$target_user" = "root" ]; then
     warn "Steam instalado. Execute como usuário normal para baixar o cliente:"
-    warn "  sudo -u <usuario> -H steam"
+    warn "  su - <usuario> -c steam"
     return
   fi
 
@@ -128,6 +145,13 @@ try_launch_steam_for_normal_user() {
       WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
       XDG_RUNTIME_DIR="$runtime_dir" \
       steam >/dev/null 2>&1 &
+    success "Steam iniciado para '$target_user'."
+    return
+  fi
+
+  if [ "$EUID" -eq 0 ] && command -v su >/dev/null 2>&1; then
+    su - "$target_user" -c "DISPLAY='${DISPLAY:-}' WAYLAND_DISPLAY='${WAYLAND_DISPLAY:-}' XDG_RUNTIME_DIR='$runtime_dir' steam" \
+      >/dev/null 2>&1 &
     success "Steam iniciado para '$target_user'."
     return
   fi
@@ -152,5 +176,5 @@ try_launch_steam_for_normal_user() {
   fi
 
   warn "Steam instalado, mas não foi possível iniciar automaticamente."
-  warn "Execute manualmente com: sudo -u $target_user -H steam"
+  warn "Execute manualmente com: su - $target_user -c steam"
 }
