@@ -31,7 +31,11 @@ else
 fi
 
 # ---------- Variáveis globais ----------
-APT_CMD=(sudo apt-get)
+if [ "$EUID" -eq 0 ]; then
+  APT_CMD=(apt-get)
+else
+  APT_CMD=(sudo apt-get)
+fi
 export DEBIAN_FRONTEND=noninteractive
 
 # ---------- Logging ----------
@@ -98,8 +102,21 @@ require_tools() {
     exit 1
   fi
 
-  if ! command -v sudo >/dev/null 2>&1; then
+  if [ "$EUID" -ne 0 ] && ! command -v sudo >/dev/null 2>&1; then
     error "sudo não está instalado."
+    exit 1
+  fi
+}
+
+ensure_privileges() {
+  if [ "$DRY_RUN" = true ] || [ "$EUID" -eq 0 ]; then
+    return
+  fi
+
+  log "Validando privilégios sudo..."
+  if ! sudo -v; then
+    error "Este usuário não tem permissão sudo para instalar pacotes."
+    error "Use um usuário com sudo, execute como root, ou peça acesso ao administrador."
     exit 1
   fi
 }
@@ -369,6 +386,7 @@ done
 require_tools
 ensure_any_module_selected
 print_summary
+ensure_privileges
 
 log "Atualizando índices do APT..."
 if [ "$DRY_RUN" = false ]; then
