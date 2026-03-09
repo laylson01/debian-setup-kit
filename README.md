@@ -165,6 +165,12 @@ Antes de rodar em uma máquina principal, teste com:
 
 Também é recomendado revisar os pacotes do módulo `--optional` para ajustar ao seu uso.
 
+## Limitações e comportamento esperado
+
+- O script foi feito para Debian/derivados com `apt-get`, `dpkg` e `sudo`.
+- A habilitação automática do SSH depende de `systemctl` (ambientes sem `systemd` podem exigir configuração manual do serviço).
+- Um pacote é considerado instalado apenas quando está no estado `install ok installed`.
+
 ## Publicação no GitHub
 
 Depois de criar o repositório no GitHub, use:

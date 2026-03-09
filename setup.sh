@@ -31,7 +31,7 @@ else
 fi
 
 # ---------- Variáveis globais ----------
-APT_CMD="sudo apt-get"
+APT_CMD=(sudo apt-get)
 export DEBIAN_FRONTEND=noninteractive
 
 # ---------- Logging ----------
@@ -114,7 +114,7 @@ ensure_any_module_selected() {
 }
 
 package_installed() {
-  dpkg -s "$1" >/dev/null 2>&1
+  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q '^install ok installed$'
 }
 
 # ---------- Ações ----------
@@ -150,7 +150,7 @@ install_packages() {
     return
   fi
 
-  $APT_CMD install -y --no-install-recommends "${missing[@]}"
+  "${APT_CMD[@]}" install -y --no-install-recommends "${missing[@]}"
   success "Módulo '$module_name' concluído."
 }
 
@@ -169,9 +169,16 @@ create_directories() {
 enable_ssh_if_installed() {
   if package_installed "openssh-server"; then
     log "Ativando serviço SSH..."
-    sudo systemctl enable ssh >/dev/null 2>&1 || true
-    sudo systemctl start ssh >/dev/null 2>&1 || true
-    success "SSH habilitado."
+    if ! command -v systemctl >/dev/null 2>&1; then
+      warn "systemctl não disponível; não foi possível habilitar o SSH automaticamente."
+      return
+    fi
+
+    if sudo systemctl enable ssh >/dev/null 2>&1 && sudo systemctl start ssh >/dev/null 2>&1; then
+      success "SSH habilitado."
+    else
+      warn "Não foi possível habilitar/iniciar o serviço SSH automaticamente."
+    fi
   fi
 }
 
@@ -365,7 +372,7 @@ print_summary
 
 log "Atualizando índices do APT..."
 if [ "$DRY_RUN" = false ]; then
-  sudo apt-get update
+  "${APT_CMD[@]}" update
 else
   warn "Dry-run ativo: apt update não será executado."
 fi
@@ -373,7 +380,7 @@ fi
 if [ "$DO_UPGRADE" = true ]; then
   log "Atualizando sistema..."
   if [ "$DRY_RUN" = false ]; then
-    sudo apt-get upgrade -y
+    "${APT_CMD[@]}" upgrade -y
   else
     warn "Dry-run ativo: apt upgrade não será executado."
   fi
