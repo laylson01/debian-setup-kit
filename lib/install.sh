@@ -56,9 +56,22 @@ install_packages() {
   fi
 
   "${APT_CMD[@]}" install -y --no-install-recommends "${installable[@]}"
-  INSTALLED_THIS_RUN+=("${installable[@]}")
-  echo "Pacotes instalados em '$module_name':"
-  printf ' - %s\n' "${installable[@]}"
+
+  local installed_now=()
+  for pkg in "${installable[@]}"; do
+    if package_installed "$pkg"; then
+      installed_now+=("$pkg")
+    fi
+  done
+
+  if [ "${#installed_now[@]}" -gt 0 ]; then
+    INSTALLED_THIS_RUN+=("${installed_now[@]}")
+    echo "Pacotes instalados em '$module_name':"
+    printf ' - %s\n' "${installed_now[@]}"
+  else
+    warn "Nenhum novo pacote foi instalado em '$module_name'."
+  fi
+
   success "Módulo '$module_name' concluído."
 }
 

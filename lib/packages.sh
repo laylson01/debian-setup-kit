@@ -105,7 +105,6 @@ GAMING_PACKAGES=(
   winetricks
   gamemode
   mangohud
-  gamescope
   goverlay
   vkbasalt
   libvulkan1
