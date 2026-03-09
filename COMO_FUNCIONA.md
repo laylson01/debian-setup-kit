@@ -1,6 +1,6 @@
 # Como o `setup.sh` funciona (passo a passo)
 
-Este documento explica o script [`setup.sh`](/home/laylson/Downloads/debian-bootstrap/setup.sh) de ponta a ponta: o que ele faz, em que ordem faz, quais opções existem e o que esperar em cada etapa.
+Este documento explica o script [`setup.sh`](./setup.sh) de ponta a ponta: o que ele faz, em que ordem faz, quais opções existem e o que esperar em cada etapa.
 
 ## 1. Objetivo do projeto
 
@@ -254,6 +254,6 @@ Checklist recomendado:
 
 ## 10. Arquivos principais do projeto
 
-- Script principal: [`setup.sh`](/home/laylson/Downloads/debian-bootstrap/setup.sh)
-- Guia de uso rápido: [`README.md`](/home/laylson/Downloads/debian-bootstrap/README.md)
-- Licença: [`LICENSE`](/home/laylson/Downloads/debian-bootstrap/LICENSE)
+- Script principal: [`setup.sh`](./setup.sh)
+- Guia de uso rápido: [`README.md`](./README.md)
+- Licença: [`LICENSE`](./LICENSE)

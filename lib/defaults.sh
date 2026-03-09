@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034
 
 if [ "$EUID" -eq 0 ]; then
   APT_CMD=(apt-get)

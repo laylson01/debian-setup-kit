@@ -108,7 +108,8 @@ rollback_apt_sources() {
 
 auto_fix_apt_sources() {
   local target_codename="$1"
-  local backup_dir="/var/backups/debian-bootstrap-apt-$(date +%Y%m%d-%H%M%S)"
+  local backup_dir=""
+  backup_dir="/var/backups/debian-bootstrap-apt-$(date +%Y%m%d-%H%M%S)"
 
   log "Executando correção automática de sources APT para '$target_codename'..."
   log "Salvando backup em: $backup_dir"
@@ -221,7 +222,7 @@ ensure_apt_release_consistency() {
     fi
 
     error "Foram detectados múltiplos codenames Debian nos repositórios APT:"
-    printf ' - %s\n' $repo_codenames >&2
+    printf ' - %s\n' "$repo_codenames" >&2
     error "Isso indica mistura de releases e pode quebrar dependências."
     error "Ajuste os repositórios para uma única release (ou use --auto-fix-apt / --auto-fix-apt=preview)."
     exit 1

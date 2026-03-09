@@ -1,10 +1,20 @@
 # Debian Setup Kit
 
+[![CI](https://github.com/laylson01/debian-setup-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/laylson01/debian-setup-kit/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/badge/release-v1.0.0-blue)](./CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+
 Script para preparar Debian de forma rápida e simples.
 
 Funciona para:
 - workstation (dev, terminal, rede, automação, embedded)
 - servidor minimal (`minimal-server`)
+
+## Compatibilidade
+
+- Debian 11 (Bullseye)
+- Debian 12 (Bookworm)
+- Debian 13 (Trixie)
 
 ## Comece em 30 segundos
 
@@ -88,6 +98,34 @@ Exemplo com stacks específicas:
 ./setup.sh --base --terminal --dev
 ```
 
+## FAQ
+
+### 1) `sudo: user is not in the sudoers file`
+
+Use um usuário com permissão `sudo` ou rode como `root`.
+
+### 2) Erro de APT desalinhado (`bookworm` x `trixie`)
+
+Use:
+
+```bash
+./setup.sh --auto-fix-apt=preview --dev
+```
+
+Se estiver correto, aplique:
+
+```bash
+./setup.sh --auto-fix-apt --dev
+```
+
+### 3) `--interactive` não funciona no terminal
+
+Use fallback de CLI:
+
+```bash
+./setup.sh --interactive=cli
+```
+
 ## Requisitos
 
 - Debian/derivado com `apt-get` e `dpkg`
@@ -99,6 +137,21 @@ Exemplo com stacks específicas:
 - O script valida conflitos de release APT.
 - Se usar `--auto-fix-apt`, ele cria backup das sources antes.
 - `--auto-fix-apt=preview` ativa modo seguro (`dry-run`).
+
+## Antes de publicar/rodar em produção
+
+- Rode `./setup.sh --all --dry-run` para validar fluxo sem alterações.
+- Revise a política em [`SECURITY.md`](./SECURITY.md).
+- Não versione credenciais (`.env`, chaves `.pem/.key`, tokens).
+- Recomenda-se testar primeiro em VM/snapshot.
+
+## Contribuição
+
+Veja o guia em [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+## Changelog
+
+Veja [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Licença
 
