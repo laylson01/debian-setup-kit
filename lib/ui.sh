@@ -44,6 +44,7 @@ Opções:
   --network       Instala ferramentas de rede
   --automation    Instala ferramentas de automação
   --embedded      Instala ferramentas para ESP32/embedded
+  --gaming       Instala stack completa para jogos
   --optional      Instala pacotes opcionais
   --desktop-basic Instala apps básicos para usuário final (browser, mídia, e-mail)
   --desktop-full  Instala desktop completo para usuário final
@@ -72,7 +73,7 @@ Exemplos:
   ./setup.sh --desktop-full
   ./setup.sh --interactive
   ./setup.sh --interactive=cli
-  ./setup.sh --terminal --automation --embedded
+  ./setup.sh --terminal --automation --embedded --gaming
   ./setup.sh --auto-fix-apt --dev
   ./setup.sh --auto-fix-apt=preview --dev
   ./setup.sh --all --dry-run
@@ -88,6 +89,7 @@ print_summary() {
   echo "  Network:    $INSTALL_NETWORK"
   echo "  Automation: $INSTALL_AUTOMATION"
   echo "  Embedded:   $INSTALL_EMBEDDED"
+  echo "  Gaming:     $INSTALL_GAMING"
   echo "  Optional:   $INSTALL_OPTIONAL"
   echo "  DesktopBasic: $INSTALL_DESKTOP_BASIC"
   echo "  DesktopFull:  $INSTALL_DESKTOP_FULL"
@@ -134,6 +136,10 @@ print_package_catalog() {
   echo
   echo "[embedded]"
   printf ' - %s\n' "${EMBEDDED_PACKAGES[@]}"
+
+  echo
+  echo "[gaming]"
+  printf ' - %s\n' "${GAMING_PACKAGES[@]}"
 
   echo
   echo "[optional]"
@@ -186,6 +192,7 @@ print_welcome() {
   echo "  - network"
   echo "  - automation"
   echo "  - embedded"
+  echo "  - gaming"
   echo "  - optional"
   echo "  - desktop-basic"
   echo "  - desktop-full"

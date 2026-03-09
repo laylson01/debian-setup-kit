@@ -44,6 +44,7 @@ while [ "$#" -gt 0 ]; do
       INSTALL_NETWORK=true
       INSTALL_AUTOMATION=true
       INSTALL_EMBEDDED=true
+      INSTALL_GAMING=true
       INSTALL_OPTIONAL=true
       INSTALL_DESKTOP_BASIC=true
       INSTALL_DESKTOP_FULL=true
@@ -73,6 +74,9 @@ while [ "$#" -gt 0 ]; do
       ;;
     --embedded)
       INSTALL_EMBEDDED=true
+      ;;
+    --gaming)
+      INSTALL_GAMING=true
       ;;
     --optional)
       INSTALL_OPTIONAL=true
@@ -212,6 +216,7 @@ $INSTALL_DEV && install_packages "dev" "${DEV_PACKAGES[@]}"
 $INSTALL_NETWORK && install_packages "network" "${NETWORK_PACKAGES[@]}"
 $INSTALL_AUTOMATION && install_packages "automation" "${AUTOMATION_PACKAGES[@]}"
 $INSTALL_EMBEDDED && install_packages "embedded" "${EMBEDDED_PACKAGES[@]}"
+$INSTALL_GAMING && install_packages "gaming" "${GAMING_PACKAGES[@]}"
 $INSTALL_OPTIONAL && install_packages "optional" "${OPTIONAL_PACKAGES[@]}"
 $INSTALL_DESKTOP_BASIC && install_packages "desktop-basic" "${DESKTOP_BASIC_PACKAGES[@]}"
 $INSTALL_DESKTOP_FULL && install_packages "desktop-full" "${DESKTOP_FULL_PACKAGES[@]}"

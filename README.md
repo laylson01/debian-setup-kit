@@ -7,7 +7,7 @@
 Script para preparar Debian de forma rápida e simples.
 
 Funciona para:
-- workstation (dev, terminal, rede, automação, embedded)
+- workstation (dev, terminal, rede, automação, embedded, gaming)
 - servidor minimal (`minimal-server`)
 
 ## Compatibilidade
@@ -73,6 +73,12 @@ Desktop completo para usuário comum:
 ./setup.sh --desktop-full
 ```
 
+Stack completa para jogos:
+
+```bash
+./setup.sh --gaming
+```
+
 ## Correção de repositórios APT (quando necessário)
 
 Aplicar correção automática:
@@ -109,6 +115,7 @@ Restaurar último backup de sources:
 - `--network`
 - `--automation`
 - `--embedded`
+- `--gaming`
 - `--optional`
 - `--desktop-basic`
 - `--desktop-full`
@@ -215,6 +222,27 @@ Exemplo com stacks específicas:
 - `minicom`
 - `picocom`
 
+### `--gaming`
+
+- `steam-installer`
+- `lutris`
+- `retroarch`
+- `wine`
+- `wine64`
+- `wine32`
+- `winetricks`
+- `gamemode`
+- `mangohud`
+- `gamescope`
+- `goverlay`
+- `vkbasalt`
+- `libvulkan1`
+- `mesa-vulkan-drivers`
+- `vulkan-validationlayers`
+- `vulkan-tools`
+- `mesa-utils`
+- `jstest-gtk`
+
 ### `--optional`
 
 - `ufw`
@@ -264,6 +292,12 @@ Exemplo com stacks específicas:
 - `netcat-openbsd`
 - `rsync`
 - `tmux`
+
+## Observações da stack de jogos
+
+- `steam-installer` normalmente requer repositórios `contrib`, `non-free` e `non-free-firmware`.
+- `wine32` pode exigir arquitetura `i386` habilitada (`dpkg --add-architecture i386` + `apt update`).
+- Alguns pacotes de jogos podem não existir em todos os codenames; o script ignora automaticamente os indisponíveis.
 
 ## FAQ
 

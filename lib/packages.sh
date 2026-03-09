@@ -95,6 +95,27 @@ EMBEDDED_PACKAGES=(
   picocom
 )
 
+GAMING_PACKAGES=(
+  steam-installer
+  lutris
+  retroarch
+  wine
+  wine64
+  wine32
+  winetricks
+  gamemode
+  mangohud
+  gamescope
+  goverlay
+  vkbasalt
+  libvulkan1
+  mesa-vulkan-drivers
+  vulkan-validationlayers
+  vulkan-tools
+  mesa-utils
+  jstest-gtk
+)
+
 OPTIONAL_PACKAGES=(
   ufw
   flatpak
