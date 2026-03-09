@@ -79,7 +79,9 @@ Opções:
   --automation    Instala ferramentas de automação
   --embedded      Instala ferramentas para ESP32/embedded
   --optional      Instala pacotes opcionais
-  --interactive   Seleciona stacks por teclado (checklist)
+  --interactive              Seleciona stacks por teclado (auto)
+  --interactive=tui          Força checklist com whiptail
+  --interactive=cli          Força seleção por números no terminal
   --auto-fix-apt              Corrige automaticamente sources APT Debian desalinhadas
   --auto-fix-apt=preview      Mostra o que seria alterado, sem modificar o sistema
   --no-upgrade    Não executa apt upgrade
@@ -90,6 +92,7 @@ Exemplos:
   ./setup.sh --all
   ./setup.sh --base --dev --network
   ./setup.sh --interactive
+  ./setup.sh --interactive=cli
   ./setup.sh --terminal --automation --embedded
   ./setup.sh --auto-fix-apt --dev
   ./setup.sh --auto-fix-apt=preview --dev
@@ -369,11 +372,11 @@ interactive_select_modules() {
 
   reset_module_selection
 
-  if command -v whiptail >/dev/null 2>&1; then
+  if [ "$INTERACTIVE_MODE" != "cli" ] && command -v whiptail >/dev/null 2>&1; then
     local choices
     choices="$(
       whiptail --title "Debian Bootstrap" \
-        --checklist "Use ESPAÇO para marcar, setas para navegar e ENTER para confirmar." \
+        --checklist "Use ESPAÇO para marcar; TAB vai para <Ok>; ENTER confirma." \
         20 90 10 \
         "BASE" "Base do sistema" "$base_state" \
         "TERMINAL" "Utilitários de terminal" "$terminal_state" \
@@ -400,6 +403,11 @@ interactive_select_modules() {
       esac
     done
     return
+  fi
+
+  if [ "$INTERACTIVE_MODE" = "tui" ] && ! command -v whiptail >/dev/null 2>&1; then
+    error "Modo --interactive=tui requer 'whiptail', mas ele não está instalado."
+    exit 1
   fi
 
   warn "whiptail não encontrado. Usando fallback por números."
@@ -657,6 +665,7 @@ DO_UPGRADE=true
 DRY_RUN=false
 AUTO_FIX_APT_MODE="off"
 INTERACTIVE=false
+INTERACTIVE_MODE="auto"
 
 # ---------- Parse argumentos ----------
 if [ "$#" -eq 0 ]; then
@@ -698,6 +707,15 @@ while [ "$#" -gt 0 ]; do
       ;;
     --interactive)
       INTERACTIVE=true
+      INTERACTIVE_MODE="auto"
+      ;;
+    --interactive=tui)
+      INTERACTIVE=true
+      INTERACTIVE_MODE="tui"
+      ;;
+    --interactive=cli)
+      INTERACTIVE=true
+      INTERACTIVE_MODE="cli"
       ;;
     --no-upgrade)
       DO_UPGRADE=false
