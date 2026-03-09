@@ -79,6 +79,7 @@ Opções:
   --automation    Instala ferramentas de automação
   --embedded      Instala ferramentas para ESP32/embedded
   --optional      Instala pacotes opcionais
+  --interactive   Seleciona stacks por teclado (checklist)
   --auto-fix-apt              Corrige automaticamente sources APT Debian desalinhadas
   --auto-fix-apt=preview      Mostra o que seria alterado, sem modificar o sistema
   --no-upgrade    Não executa apt upgrade
@@ -88,6 +89,7 @@ Opções:
 Exemplos:
   ./setup.sh --all
   ./setup.sh --base --dev --network
+  ./setup.sh --interactive
   ./setup.sh --terminal --automation --embedded
   ./setup.sh --auto-fix-apt --dev
   ./setup.sh --auto-fix-apt=preview --dev
@@ -335,6 +337,101 @@ ensure_any_module_selected() {
   fi
 }
 
+bool_to_onoff() {
+  if [ "$1" = true ]; then
+    printf 'ON\n'
+  else
+    printf 'OFF\n'
+  fi
+}
+
+reset_module_selection() {
+  INSTALL_BASE=false
+  INSTALL_TERMINAL=false
+  INSTALL_DEV=false
+  INSTALL_NETWORK=false
+  INSTALL_AUTOMATION=false
+  INSTALL_EMBEDDED=false
+  INSTALL_OPTIONAL=false
+}
+
+interactive_select_modules() {
+  log "Modo interativo: selecione os stacks desejados."
+
+  local base_state terminal_state dev_state network_state automation_state embedded_state optional_state
+  base_state="$(bool_to_onoff "$INSTALL_BASE")"
+  terminal_state="$(bool_to_onoff "$INSTALL_TERMINAL")"
+  dev_state="$(bool_to_onoff "$INSTALL_DEV")"
+  network_state="$(bool_to_onoff "$INSTALL_NETWORK")"
+  automation_state="$(bool_to_onoff "$INSTALL_AUTOMATION")"
+  embedded_state="$(bool_to_onoff "$INSTALL_EMBEDDED")"
+  optional_state="$(bool_to_onoff "$INSTALL_OPTIONAL")"
+
+  reset_module_selection
+
+  if command -v whiptail >/dev/null 2>&1; then
+    local choices
+    choices="$(
+      whiptail --title "Debian Bootstrap" \
+        --checklist "Use ESPAÇO para marcar, setas para navegar e ENTER para confirmar." \
+        20 90 10 \
+        "BASE" "Base do sistema" "$base_state" \
+        "TERMINAL" "Utilitários de terminal" "$terminal_state" \
+        "DEV" "Ferramentas de desenvolvimento" "$dev_state" \
+        "NETWORK" "Ferramentas de rede" "$network_state" \
+        "AUTOMATION" "Ferramentas de automação" "$automation_state" \
+        "EMBEDDED" "Ferramentas para ESP32/embedded" "$embedded_state" \
+        "OPTIONAL" "Pacotes opcionais" "$optional_state" \
+        3>&1 1>&2 2>&3
+    )" || {
+      error "Seleção interativa cancelada."
+      exit 1
+    }
+
+    for item in $choices; do
+      case "${item//\"/}" in
+        BASE) INSTALL_BASE=true ;;
+        TERMINAL) INSTALL_TERMINAL=true ;;
+        DEV) INSTALL_DEV=true ;;
+        NETWORK) INSTALL_NETWORK=true ;;
+        AUTOMATION) INSTALL_AUTOMATION=true ;;
+        EMBEDDED) INSTALL_EMBEDDED=true ;;
+        OPTIONAL) INSTALL_OPTIONAL=true ;;
+      esac
+    done
+    return
+  fi
+
+  warn "whiptail não encontrado. Usando fallback por números."
+  echo "Selecione os stacks (ex.: 1 3 4):"
+  echo "  1) Base"
+  echo "  2) Terminal"
+  echo "  3) Dev"
+  echo "  4) Network"
+  echo "  5) Automation"
+  echo "  6) Embedded"
+  echo "  7) Optional"
+
+  local picks=()
+  read -r -a picks
+
+  local pick
+  for pick in "${picks[@]}"; do
+    case "$pick" in
+      1) INSTALL_BASE=true ;;
+      2) INSTALL_TERMINAL=true ;;
+      3) INSTALL_DEV=true ;;
+      4) INSTALL_NETWORK=true ;;
+      5) INSTALL_AUTOMATION=true ;;
+      6) INSTALL_EMBEDDED=true ;;
+      7) INSTALL_OPTIONAL=true ;;
+      *)
+        warn "Opção ignorada no modo fallback: $pick"
+        ;;
+    esac
+  done
+}
+
 package_installed() {
   dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q '^install ok installed$'
 }
@@ -559,6 +656,7 @@ INSTALL_OPTIONAL=false
 DO_UPGRADE=true
 DRY_RUN=false
 AUTO_FIX_APT_MODE="off"
+INTERACTIVE=false
 
 # ---------- Parse argumentos ----------
 if [ "$#" -eq 0 ]; then
@@ -598,6 +696,9 @@ while [ "$#" -gt 0 ]; do
     --optional)
       INSTALL_OPTIONAL=true
       ;;
+    --interactive)
+      INTERACTIVE=true
+      ;;
     --no-upgrade)
       DO_UPGRADE=false
       ;;
@@ -626,6 +727,10 @@ while [ "$#" -gt 0 ]; do
   esac
   shift
 done
+
+if [ "$INTERACTIVE" = true ]; then
+  interactive_select_modules
+fi
 
 require_tools
 ensure_any_module_selected
