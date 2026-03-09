@@ -17,6 +17,8 @@ O objetivo é deixar uma instalação nova do Debian pronta para estudo e trabal
 - checagem de pacotes já instalados
 - logs coloridos
 - tratamento de erro com indicação de linha/comando
+- validação de consistência de release Debian (sistema x repositórios)
+- validação de integridade do APT antes da instalação
 - criação de diretórios úteis
 - habilitação automática do SSH quando instalado
 
@@ -167,7 +169,9 @@ Também é recomendado revisar os pacotes do módulo `--optional` para ajustar a
 
 ## Limitações e comportamento esperado
 
-- O script foi feito para Debian/derivados com `apt-get`, `dpkg` e `sudo`.
+- O script foi feito para Debian/derivados com `apt-get`, `dpkg` e `sudo` (ou execução como `root`).
+- O script bloqueia execução quando detecta mistura de releases Debian nos repositórios APT.
+- O script também bloqueia quando o `apt-get check` detecta dependências quebradas.
 - A habilitação automática do SSH depende de `systemctl` (ambientes sem `systemd` podem exigir configuração manual do serviço).
 - Um pacote é considerado instalado apenas quando está no estado `install ok installed`.
 

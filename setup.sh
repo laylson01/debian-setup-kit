@@ -108,6 +108,75 @@ require_tools() {
   fi
 }
 
+get_system_codename() {
+  if [ -r /etc/os-release ]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    if [ -n "${VERSION_CODENAME:-}" ]; then
+      printf '%s\n' "$VERSION_CODENAME"
+      return
+    fi
+  fi
+
+  if command -v lsb_release >/dev/null 2>&1; then
+    lsb_release -sc
+    return
+  fi
+
+  printf '%s\n' ""
+}
+
+ensure_apt_release_consistency() {
+  local system_codename
+  system_codename="$(get_system_codename)"
+
+  if [ -z "$system_codename" ]; then
+    warn "Não foi possível detectar o codename do sistema; pulando checagem de consistência de release."
+    return
+  fi
+
+  local repo_codenames
+  repo_codenames="$(
+    apt-cache policy \
+      | grep 'release ' \
+      | grep 'o=Debian' \
+      | sed -n 's/.*n=\([^, ]*\).*/\1/p' \
+      | sort -u
+  )"
+
+  if [ -z "$repo_codenames" ]; then
+    warn "Não foi possível detectar codenames Debian nos repositórios; pulando checagem de consistência de release."
+    return
+  fi
+
+  local codename_count
+  codename_count="$(printf '%s\n' "$repo_codenames" | sed '/^$/d' | wc -l)"
+  if [ "$codename_count" -gt 1 ]; then
+    error "Foram detectados múltiplos codenames Debian nos repositórios APT:"
+    printf ' - %s\n' $repo_codenames >&2
+    error "Isso indica mistura de releases e pode quebrar dependências."
+    error "Ajuste os repositórios para uma única release (ex.: bullseye, bookworm ou trixie)."
+    exit 1
+  fi
+
+  if ! printf '%s\n' "$repo_codenames" | grep -qx "$system_codename"; then
+    error "Codename do sistema: $system_codename"
+    error "Codename Debian detectado nos repositórios: $repo_codenames"
+    error "Sistema e repositórios estão desalinhados; isso causa conflitos de dependência."
+    error "Alinhe os repositórios ao codename do sistema e rode: apt update && apt --fix-broken install"
+    exit 1
+  fi
+}
+
+ensure_apt_health() {
+  log "Verificando integridade de dependências (apt-get check)..."
+  if ! "${APT_CMD[@]}" check >/dev/null; then
+    error "O APT detectou dependências quebradas no sistema."
+    error "Corrija antes de continuar com: apt --fix-broken install && apt full-upgrade"
+    exit 1
+  fi
+}
+
 ensure_privileges() {
   if [ "$DRY_RUN" = true ] || [ "$EUID" -eq 0 ]; then
     return
@@ -391,6 +460,8 @@ ensure_privileges
 log "Atualizando índices do APT..."
 if [ "$DRY_RUN" = false ]; then
   "${APT_CMD[@]}" update
+  ensure_apt_release_consistency
+  ensure_apt_health
 else
   warn "Dry-run ativo: apt update não será executado."
 fi

@@ -33,11 +33,13 @@ Quando você roda o script, ele segue esta ordem:
 4. Garante que ao menos um módulo foi selecionado.
 5. Mostra resumo das opções escolhidas.
 6. Executa `apt update` (exceto em `--dry-run`).
-7. Executa `apt upgrade -y` (a menos que `--no-upgrade` ou `--dry-run`).
-8. Processa os módulos selecionados e instala apenas pacotes faltantes.
-9. Se não for `--dry-run`, cria diretórios de trabalho.
-10. Se `openssh-server` estiver instalado, tenta habilitar/iniciar SSH.
-11. Mostra mensagem final de sucesso.
+7. Valida consistência de release Debian (codename do sistema x repositórios).
+8. Executa `apt-get check` para validar saúde das dependências.
+9. Executa `apt upgrade -y` (a menos que `--no-upgrade` ou `--dry-run`).
+10. Processa os módulos selecionados e instala apenas pacotes faltantes.
+11. Se não for `--dry-run`, cria diretórios de trabalho.
+12. Se `openssh-server` estiver instalado, tenta habilitar/iniciar SSH.
+13. Mostra mensagem final de sucesso.
 
 ## 4. Opções disponíveis
 
@@ -94,10 +96,13 @@ Antes de instalar, o script imprime um resumo com:
 - se haverá `upgrade`
 - se é `dry-run`
 
-## 5.5 Atualização e upgrade
+## 5.5 Atualização, consistência e integridade
 
 - Sempre tenta `apt update` (exceto `--dry-run`).
-- Roda `apt upgrade -y` somente se `DO_UPGRADE=true` e não for `dry-run`.
+- Valida se os repositórios Debian usam o mesmo codename do sistema (ex.: tudo `bookworm`).
+- Bloqueia se detectar mistura de releases (ex.: `bookworm` + `trixie`).
+- Executa `apt-get check` para detectar dependências quebradas antes da instalação.
+- Só então segue para `apt upgrade -y` quando `DO_UPGRADE=true`.
 
 ## 5.6 Instalação por módulo
 
