@@ -13,7 +13,8 @@ Obrigado por contribuir com o Debian Setup Kit.
 
 ```bash
 bash -n setup.sh lib/*.sh
-shellcheck setup.sh lib/*.sh
+bash tests/apt_release_consistency_test.sh
+shellcheck setup.sh lib/*.sh tests/*.sh
 ./setup.sh --all --dry-run
 ```
 

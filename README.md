@@ -99,6 +99,31 @@ Restaurar último backup de sources:
 ./setup.sh --rollback-sources
 ```
 
+## Repositórios APT recomendados
+
+Para a comunidade, a recomendação é manter os repositórios Debian alinhados com a release do sistema.
+
+Exemplo recomendado para Debian `trixie`:
+
+```bash
+deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
+```
+
+Exceção opcional, apenas se houver necessidade real de drivers ou pacotes legados:
+
+```bash
+deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware
+```
+
+Evite misturar no mesmo sistema:
+
+- `bookworm` com `trixie`
+- `bookworm-updates` com `trixie`
+- `bookworm-security` com `trixie`
+- releases Debian diferentes nos repositórios principais
+
 ## Flags úteis
 
 - `--dry-run`: mostra o que faria, sem instalar

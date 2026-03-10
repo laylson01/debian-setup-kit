@@ -17,7 +17,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
       - name: Bash syntax check
-        run: bash -n setup.sh lib/*.sh
+        run: bash -n setup.sh lib/*.sh tests/*.sh
+
+      - name: Behavior tests
+        run: bash tests/apt_release_consistency_test.sh
 
       - name: Shellcheck
-        run: shellcheck setup.sh lib/*.sh
+        run: shellcheck setup.sh lib/*.sh tests/*.sh
