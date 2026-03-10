@@ -234,7 +234,6 @@ $INSTALL_DESKTOP_FULL && install_packages "desktop-full" "${DESKTOP_FULL_PACKAGE
 if [ "$DRY_RUN" = false ]; then
   create_directories
   enable_ssh_if_installed
-  try_launch_steam_for_normal_user
   print_installed_summary
   suggest_autoremove_if_needed
 else

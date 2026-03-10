@@ -96,7 +96,6 @@ EMBEDDED_PACKAGES=(
 )
 
 GAMING_PACKAGES=(
-  steam-installer
   lutris
   retroarch
   wine

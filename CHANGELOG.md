@@ -21,3 +21,4 @@ Primeira versão pública para comunidade.
 - README simplificado para onboarding rápido
 - Validação de release APT agora permite `*-backports` de outra release sem bloquear a execução
 - Mistura de codenames APT agora gera avisos e não interrompe mais o setup
+- Stack `gaming` não instala mais nem tenta iniciar o Steam automaticamente
