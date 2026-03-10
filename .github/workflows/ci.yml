@@ -20,7 +20,10 @@ jobs:
         run: bash -n setup.sh lib/*.sh tests/*.sh
 
       - name: Behavior tests
-        run: bash tests/apt_release_consistency_test.sh
+        run: |
+          for test_file in tests/*.sh; do
+            bash "$test_file"
+          done
 
       - name: Shellcheck
         run: shellcheck setup.sh lib/*.sh tests/*.sh

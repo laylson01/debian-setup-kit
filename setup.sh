@@ -87,6 +87,15 @@ while [ "$#" -gt 0 ]; do
     --desktop-full)
       INSTALL_DESKTOP_FULL=true
       ;;
+    --enable-i386)
+      ENABLE_I386=true
+      ;;
+    --enable-services)
+      ENABLE_SERVICES=true
+      ;;
+    --create-user-dirs)
+      CREATE_USER_DIRS=true
+      ;;
     --list-packages)
       LIST_PACKAGES=true
       ;;
@@ -183,6 +192,14 @@ esac
 
 require_tools
 ensure_any_module_selected
+# Algumas stacks dependem fortemente de bibliotecas 32-bit. Para esses casos o
+# opt-in de i386 passa a vir embutido na própria stack, evitando erro operacional
+# em fluxos conhecidos como gaming e embedded.
+if [ "$INSTALL_GAMING" = true ] || [ "$INSTALL_EMBEDDED" = true ]; then
+  ENABLE_I386=true
+fi
+# O resumo vem antes da confirmação para mostrar claramente quais alterações de
+# sistema foram autorizadas além da instalação de pacotes.
 print_welcome
 print_summary
 ensure_privileges
@@ -192,7 +209,7 @@ ensure_gaming_prereqs
 log "Atualizando índices do APT..."
 if [ "$DO_UPDATE" = true ] || [ "$NEEDS_APT_UPDATE_AFTER_ARCH_ADD" = true ]; then
   if [ "$DO_UPDATE" = false ] && [ "$NEEDS_APT_UPDATE_AFTER_ARCH_ADD" = true ]; then
-    warn "--skip-update foi ignorado porque a stack gaming habilitou i386 e precisa atualizar índices."
+    warn "--skip-update foi ignorado porque uma stack habilitou i386 e precisa atualizar índices."
   fi
 
   if [ "$DRY_RUN" = true ]; then
@@ -232,12 +249,11 @@ $INSTALL_DESKTOP_FULL && install_packages "desktop-full" "${DESKTOP_FULL_PACKAGE
 [ "$PROFILE" = "minimal-server" ] && install_packages "profile:minimal-server" "${MINIMAL_SERVER_PACKAGES[@]}"
 
 if [ "$DRY_RUN" = false ]; then
-  create_directories
-  enable_ssh_if_installed
+  apply_post_install_actions
   print_installed_summary
   suggest_autoremove_if_needed
 else
-  warn "Dry-run ativo: diretórios e serviços não serão alterados."
+  warn "Dry-run ativo: diretórios do usuário e serviços não serão alterados."
 fi
 
 echo

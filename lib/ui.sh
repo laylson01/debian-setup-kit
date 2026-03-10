@@ -48,6 +48,9 @@ Opções:
   --optional      Instala pacotes opcionais
   --desktop-basic Instala apps básicos para usuário final (browser, mídia, e-mail)
   --desktop-full  Instala desktop completo para usuário final
+  --enable-i386          Permite habilitar a arquitetura i386 quando uma stack precisar
+  --enable-services      Permite habilitar/iniciar serviços automaticamente (ex.: SSH)
+  --create-user-dirs     Permite criar diretórios opinativos no HOME do usuário
   --list-packages Lista pacotes por stack e sai
   --interactive              Seleciona stacks por teclado (auto)
   --interactive=tui          Força checklist com whiptail
@@ -99,6 +102,15 @@ print_summary() {
   echo "  Dry-run:    $DRY_RUN"
   echo "  Assume-yes: $ASSUME_YES"
   echo "  Auto-fix:   $AUTO_FIX_APT_MODE"
+  echo "  Enable-i386: $ENABLE_I386"
+  echo "  Services:   $ENABLE_SERVICES"
+  echo "  User-dirs:  $CREATE_USER_DIRS"
+  echo
+  echo "Ações sensíveis:"
+  echo "  Alterar APT automaticamente: $([ "$AUTO_FIX_APT_MODE" != "off" ] && echo yes || echo no)"
+  echo "  Habilitar i386: $ENABLE_I386"
+  echo "  Habilitar serviços: $ENABLE_SERVICES"
+  echo "  Criar diretórios no HOME: $CREATE_USER_DIRS"
   echo
 }
 

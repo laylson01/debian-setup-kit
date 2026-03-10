@@ -129,8 +129,32 @@ Evite misturar no mesmo sistema:
 - `--dry-run`: mostra o que faria, sem instalar
 - `--skip-update`: pula `apt update`
 - `--skip-upgrade`: pula `apt upgrade`
+- `--enable-i386`: permite habilitar a arquitetura `i386` manualmente em fluxos fora de `gaming` e `embedded`
+- `--enable-services`: permite habilitar/iniciar serviços automaticamente
+- `--create-user-dirs`: permite criar diretórios opinativos no `HOME`
 - `--yes` / `-y`: executa sem pergunta de confirmação
 - `--list-packages`: mostra pacotes por stack e sai
+
+## Política de segurança operacional
+
+O fluxo padrão do projeto ficou mais conservador. Por default, ele:
+
+- instala pacotes das stacks selecionadas
+- não habilita `i386` automaticamente fora das stacks `gaming` e `embedded`
+- não habilita/inicia serviços automaticamente
+- não cria diretórios opinativos no `HOME`
+
+Para autorizar mudanças sensíveis, use flags explícitas:
+
+- `--enable-i386`
+- `--enable-services`
+- `--create-user-dirs`
+
+Exemplo com permissões explícitas de workstation:
+
+```bash
+./setup.sh --gaming --network --enable-services --create-user-dirs
+```
 
 ## Stacks disponíveis
 
@@ -319,7 +343,8 @@ Exemplo com stacks específicas:
 
 ## Observações da stack de jogos
 
-- A stack `--gaming` habilita `i386` automaticamente quando necessário e atualiza os índices do APT.
+- As stacks `--gaming` e `--embedded` habilitam `i386` automaticamente quando necessário.
+- Fora dessas stacks, use `--enable-i386` se quiser permitir suporte a pacotes 32-bit.
 - Alguns pacotes de jogos podem não existir em todos os codenames; o script ignora automaticamente os indisponíveis.
 
 ## FAQ
@@ -362,6 +387,8 @@ Use fallback de CLI:
 
 - O script valida conflitos de release APT e emite avisos quando detectar mistura de codenames.
 - Backports de outra release Debian são aceitos como exceção; mistura nos repositórios principais gera aviso e o setup continua.
+- O fluxo padrão instala pacotes sem criar diretórios e sem ativar serviços automaticamente.
+- `gaming` e `embedded` podem habilitar `i386` automaticamente; outras mudanças sensíveis exigem opt-in com `--enable-services` e `--create-user-dirs`.
 - Se usar `--auto-fix-apt`, ele cria backup das sources antes.
 - `--auto-fix-apt=preview` ativa modo seguro (`dry-run`).
 

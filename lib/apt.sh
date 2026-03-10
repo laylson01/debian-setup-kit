@@ -328,7 +328,15 @@ ensure_privileges() {
 }
 
 ensure_gaming_prereqs() {
-  if [ "$INSTALL_GAMING" = false ]; then
+  if [ "$INSTALL_GAMING" = false ] && [ "$INSTALL_EMBEDDED" = false ]; then
+    return
+  fi
+
+  # Gaming e embedded dependem de toolchains e bibliotecas 32-bit em cenários
+  # comuns. Fora dessas stacks, i386 continua sendo uma decisão explícita.
+  if [ "$ENABLE_I386" = false ]; then
+    warn "As stacks gaming/embedded podem precisar de i386 para pacotes e bibliotecas 32-bit."
+    warn "A arquitetura i386 não será habilitada automaticamente. Use --enable-i386 se quiser permitir essa alteração."
     return
   fi
 
@@ -337,11 +345,11 @@ ensure_gaming_prereqs() {
   fi
 
   if [ "$DRY_RUN" = true ]; then
-    warn "Dry-run: stack gaming habilitaria a arquitetura i386 automaticamente."
+    warn "Dry-run: uma stack compatível habilitaria a arquitetura i386 automaticamente."
     return
   fi
 
-  log "Habilitando arquitetura i386 (necessária para pacotes 32-bit de jogos)..."
+  log "Habilitando arquitetura i386 (necessária para stacks com dependências 32-bit)..."
   as_root dpkg --add-architecture i386
   # shellcheck disable=SC2034  # Lida em setup.sh após source deste arquivo.
   NEEDS_APT_UPDATE_AFTER_ARCH_ADD=true

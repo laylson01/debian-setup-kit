@@ -22,3 +22,5 @@ Primeira versão pública para comunidade.
 - Validação de release APT agora permite `*-backports` de outra release sem bloquear a execução
 - Mistura de codenames APT agora gera avisos e não interrompe mais o setup
 - Stack `gaming` não instala mais nem tenta iniciar o Steam automaticamente
+- Ações sensíveis (`i386`, serviços e diretórios de usuário) agora exigem flags explícitas
+- Stacks `gaming` e `embedded` voltam a habilitar `i386` automaticamente por dependência prática
