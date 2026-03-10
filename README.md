@@ -321,6 +321,8 @@ Se estiver correto, aplique:
 ./setup.sh --auto-fix-apt --dev
 ```
 
+Observação: `bookworm-backports` isolado agora é tratado como exceção permitida. Quando houver mistura de codenames nos repositórios principais (`bookworm`, `bookworm-updates`, `bookworm-security`, etc.), o script passa a emitir avisos e continuar a execução.
+
 ### 3) `--interactive` não funciona no terminal
 
 Use fallback de CLI:
@@ -337,7 +339,8 @@ Use fallback de CLI:
 
 ## Segurança e comportamento
 
-- O script valida conflitos de release APT.
+- O script valida conflitos de release APT e emite avisos quando detectar mistura de codenames.
+- Backports de outra release Debian são aceitos como exceção; mistura nos repositórios principais gera aviso e o setup continua.
 - Se usar `--auto-fix-apt`, ele cria backup das sources antes.
 - `--auto-fix-apt=preview` ativa modo seguro (`dry-run`).
 

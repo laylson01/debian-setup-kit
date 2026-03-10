@@ -19,3 +19,5 @@ Primeira versão pública para comunidade.
 
 - Refatoração para arquitetura modular em `lib/*.sh`
 - README simplificado para onboarding rápido
+- Validação de release APT agora permite `*-backports` de outra release sem bloquear a execução
+- Mistura de codenames APT agora gera avisos e não interrompe mais o setup

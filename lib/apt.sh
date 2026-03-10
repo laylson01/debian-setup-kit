@@ -35,7 +35,7 @@ get_system_codename() {
   printf '%s\n' ""
 }
 
-get_debian_repo_codenames() {
+get_debian_repo_suites() {
   local repo_suites
   repo_suites="$(
     apt-cache policy \
@@ -50,8 +50,51 @@ get_debian_repo_codenames() {
     return
   fi
 
+  printf '%s\n' "$repo_suites"
+}
+
+get_debian_repo_codenames() {
+  local repo_suites
+  repo_suites="$(get_debian_repo_suites)"
+
+  if [ -z "$repo_suites" ]; then
+    printf '%s\n' ""
+    return
+  fi
+
   printf '%s\n' "$repo_suites" \
     | sed -E 's/-(security|updates|backports|proposed-updates)$//' \
+    | sort -u
+}
+
+get_debian_non_backport_codenames() {
+  local repo_suites
+  repo_suites="$(get_debian_repo_suites)"
+
+  if [ -z "$repo_suites" ]; then
+    printf '%s\n' ""
+    return
+  fi
+
+  printf '%s\n' "$repo_suites" \
+    | grep -Ev -- '-backports$' \
+    | sed -E 's/-(security|updates|proposed-updates)$//' \
+    | sort -u
+}
+
+get_debian_foreign_backport_suites() {
+  local system_codename="$1"
+  local repo_suites
+  repo_suites="$(get_debian_repo_suites)"
+
+  if [ -z "$repo_suites" ]; then
+    printf '%s\n' ""
+    return
+  fi
+
+  printf '%s\n' "$repo_suites" \
+    | grep -E -- '-backports$' \
+    | grep -Ev "^${system_codename}-backports$" \
     | sort -u
 }
 
@@ -195,15 +238,20 @@ ensure_apt_release_consistency() {
     return
   fi
 
-  local repo_codenames
-  repo_codenames="$(get_debian_repo_codenames)"
-  if [ -z "$repo_codenames" ]; then
+  local repo_suites
+  repo_suites="$(get_debian_repo_suites)"
+  if [ -z "$repo_suites" ]; then
     warn "Não foi possível detectar codenames Debian nos repositórios; pulando checagem de consistência de release."
     return
   fi
 
+  local primary_codenames
+  primary_codenames="$(get_debian_non_backport_codenames)"
+  local foreign_backport_suites
+  foreign_backport_suites="$(get_debian_foreign_backport_suites "$system_codename")"
+
   local codename_count
-  codename_count="$(printf '%s\n' "$repo_codenames" | sed '/^$/d' | wc -l)"
+  codename_count="$(printf '%s\n' "$primary_codenames" | sed '/^$/d' | wc -l)"
   if [ "$codename_count" -gt 1 ]; then
     if [ "$AUTO_FIX_APT_MODE" = "preview" ]; then
       preview_auto_fix_apt_sources "$system_codename"
@@ -212,23 +260,23 @@ ensure_apt_release_consistency() {
     if [ "$AUTO_FIX_APT_MODE" = "apply" ] && [ "$DRY_RUN" = false ]; then
       warn "Mistura de releases detectada. Tentando correção automática (--auto-fix-apt)..."
       auto_fix_apt_sources "$system_codename"
-      repo_codenames="$(get_debian_repo_codenames)"
-      codename_count="$(printf '%s\n' "$repo_codenames" | sed '/^$/d' | wc -l)"
-      if [ "$codename_count" -le 1 ] && printf '%s\n' "$repo_codenames" | grep -qx "$system_codename"; then
+      primary_codenames="$(get_debian_non_backport_codenames)"
+      codename_count="$(printf '%s\n' "$primary_codenames" | sed '/^$/d' | wc -l)"
+      if [ "$codename_count" -le 1 ] && printf '%s\n' "$primary_codenames" | grep -qx "$system_codename"; then
         success "Sources APT alinhadas automaticamente para '$system_codename'."
         return
       fi
       error "A correção automática não conseguiu alinhar os repositórios Debian."
     fi
 
-    error "Foram detectados múltiplos codenames Debian nos repositórios APT:"
-    printf ' - %s\n' "$repo_codenames" >&2
-    error "Isso indica mistura de releases e pode quebrar dependências."
-    error "Ajuste os repositórios para uma única release (ou use --auto-fix-apt / --auto-fix-apt=preview)."
-    exit 1
+    warn "Foram detectados múltiplos codenames Debian nos repositórios APT:"
+    printf ' - %s\n' "$primary_codenames" >&2
+    warn "Isso indica mistura de releases e pode quebrar dependências."
+    warn "A execução continuará. Ajuste os repositórios para uma única release ou use --auto-fix-apt / --auto-fix-apt=preview."
+    return
   fi
 
-  if ! printf '%s\n' "$repo_codenames" | grep -qx "$system_codename"; then
+  if ! printf '%s\n' "$primary_codenames" | grep -qx "$system_codename"; then
     if [ "$AUTO_FIX_APT_MODE" = "preview" ]; then
       preview_auto_fix_apt_sources "$system_codename"
     fi
@@ -236,19 +284,24 @@ ensure_apt_release_consistency() {
     if [ "$AUTO_FIX_APT_MODE" = "apply" ] && [ "$DRY_RUN" = false ]; then
       warn "Sistema e repositórios desalinhados. Tentando correção automática (--auto-fix-apt)..."
       auto_fix_apt_sources "$system_codename"
-      repo_codenames="$(get_debian_repo_codenames)"
-      if printf '%s\n' "$repo_codenames" | grep -qx "$system_codename"; then
+      primary_codenames="$(get_debian_non_backport_codenames)"
+      if printf '%s\n' "$primary_codenames" | grep -qx "$system_codename"; then
         success "Sources APT alinhadas automaticamente para '$system_codename'."
         return
       fi
       error "A correção automática não conseguiu alinhar os repositórios Debian."
     fi
 
-    error "Codename do sistema: $system_codename"
-    error "Codename Debian detectado nos repositórios: $repo_codenames"
-    error "Sistema e repositórios estão desalinhados; isso causa conflitos de dependência."
-    error "Alinhe os repositórios ao codename do sistema e rode: apt update && apt --fix-broken install (ou use --auto-fix-apt / --auto-fix-apt=preview)."
-    exit 1
+    warn "Codename do sistema: $system_codename"
+    warn "Codename Debian detectado nos repositórios principais: $primary_codenames"
+    warn "Sistema e repositórios estão desalinhados; isso causa conflitos de dependência."
+    warn "A execução continuará. Alinhe os repositórios ao codename do sistema e rode: apt update && apt --fix-broken install (ou use --auto-fix-apt / --auto-fix-apt=preview)."
+    return
+  fi
+
+  if [ -n "$foreign_backport_suites" ]; then
+    warn "Backports de outra release detectados; mantendo como exceção permitida:"
+    printf ' - %s\n' "$foreign_backport_suites" >&2
   fi
 }
 
